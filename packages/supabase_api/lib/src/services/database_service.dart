@@ -10,11 +10,6 @@ class DatabaseService {
     var response = await _client.from('profiles').select('username').eq('user_id', id).maybeSingle();
     return response!['username'];
   }
-
-  /// Add a profile
-  Future<void> addProfile(String email) async {
-    await _client.from('profiles').insert({'email': email});
-  }
   
   /// Add friend if email exists
   Future<void> addFriend(String userEmail, String friendEmail) async {

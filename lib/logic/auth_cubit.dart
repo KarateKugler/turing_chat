@@ -125,9 +125,6 @@ class AuthCubit extends Cubit<AuthState> {
         email: response.user!.email!,
         username: username, // lazy but works
       )));
-
-      /// Add profile to 'profile' table
-      _db.addProfile(response.user!.email!);
     }
 
     /// emit Error state if failed
