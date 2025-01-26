@@ -25,4 +25,9 @@ final class AuthError extends AuthState {
   final String errorMessage;
 
   AuthError(this.errorMessage);
+
+  @override
+  String toString() {
+    return 'AuthError($errorMessage)';
+  }
 }

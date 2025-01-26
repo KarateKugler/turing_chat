@@ -27,7 +27,6 @@ class _LoginOrRegisterPageState extends State<LoginOrRegisterPage> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthCubit, AuthState>(
-
       listener: (context, state) {
         debugPrint(state.toString());
         if (state is AuthLoggedIn) {
@@ -37,7 +36,7 @@ class _LoginOrRegisterPageState extends State<LoginOrRegisterPage> {
           );
         }
       },
-      child: (showLoginView)
+      child: (showLoginView) // todo: refactor redundancies
           ? LoginView(
               onTap: togglePages,
             )

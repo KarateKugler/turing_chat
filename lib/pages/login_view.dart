@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../helpers/auth_utils.dart';
 import '../logic/auth_cubit.dart';
 import '../widgets/app_logo.dart';
@@ -29,7 +30,6 @@ class _LoginViewState extends State<LoginView> {
 
   void _validateInputs() {
     setState(() {
-
       /// Check valid E-mail
       if (!validateEmail(_emailController.text)) {
         _emailErrorMessage = 'Invalid E-Mail.';
@@ -50,121 +50,115 @@ class _LoginViewState extends State<LoginView> {
         children: [
           Center(
             child: SingleChildScrollView(
-              child: BlocConsumer<AuthCubit, AuthState>(
-                listener: (context, state) {
-                  if (state is AuthError) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Login failed: ${state.errorMessage}'),
-                      ),
-                    );
-                  }
-                },
-                builder: (context, state) {
-                  return Column(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  /// Logo
+                  const AppLogo(),
+
+                  const SizedBox(height: 50),
+
+                  /// Welcome Back message
+                  Text(
+                    'Welcome Back to ratatouille!',
+                    style: TextStyle(
+                      // put into theme data
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 16,
+                    ),
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  /// Email-Field
+                  // todo: add username option
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                    child: LoginTextField(
+                      hintText: 'E-Mail',
+                      obscureText: false,
+                      controller: _emailController,
+                      errorText: _emailErrorMessage,
+                      // prefixIcon: Icons.email,
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  /// Password-Field
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                    child: LoginTextField(
+                      hintText: 'Password',
+                      obscureText: true,
+                      controller: _passwordController,
+                      errorText: _passwordErrorMessage,
+                      // prefixIcon: Icons.lock,
+                    ),
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  /// Login Button
+                  LoginButton(
+                    text: 'Login',
+                    onTap: () async {
+                      /// Check the Inputs
+                      _validateInputs();
+
+                      if (_emailErrorMessage == null &&
+                          _passwordErrorMessage == null) {
+                        /// AuthCubit
+                        final AuthCubit authCubit = context.read<AuthCubit>();
+
+                        /// try login
+                        await authCubit.logInWithEmailPassword(
+                          email: _emailController.text,
+                          password: _passwordController.text,
+                        );
+
+                        /// todo redirect to welcome or home page
+                      }
+                    },
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  /// Text for register instead
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      /// Logo
-                      const AppLogo(),
-            
-                      const SizedBox(height: 50),
-            
-                      /// Welcome Back message
                       Text(
-                        'Welcome Back to ratatouille!',
+                        'Not a member yet? ',
                         style: TextStyle(
-                          // put into theme data
-                          color: Theme.of(context).colorScheme.primary,
-                          fontSize: 16,
-                        ),
+                            color: Theme.of(context).colorScheme.onSurface),
                       ),
-            
-                      const SizedBox(height: 25),
-            
-                      /// Email-Field
-                      // todo: add username option
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                        child: LoginTextField(
-                          hintText: 'E-Mail',
-                          obscureText: false,
-                          controller: _emailController,
-                          errorText: _emailErrorMessage,
-                          // prefixIcon: Icons.email,
-                        ),
-                      ),
-            
-                      const SizedBox(height: 10),
-            
-                      /// Password-Field
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                        child: LoginTextField(
-                          hintText: 'Password',
-                          obscureText: true,
-                          controller: _passwordController,
-                          errorText: _passwordErrorMessage,
-                          // prefixIcon: Icons.lock,
-                        ),
-                      ),
-            
-                      const SizedBox(height: 25),
-            
-                      /// Login Button
-                      LoginButton(
-                        text: 'Login',
-                        onTap: () async {
-                          /// Check the Inputs
-                          _validateInputs();
-            
-                          if (_emailErrorMessage == null &&
-                              _passwordErrorMessage == null) {
-                            /// AuthCubit
-                            final AuthCubit authCubit = context.read<AuthCubit>();
-            
-                            /// try login
-                            await authCubit.logInWithEmailPassword(
-                              email: _emailController.text,
-                              password: _passwordController.text,
-                            );
-            
-                            /// todo redirect to welcome or home page
-                          }
-                        },
-                      ),
-            
-                      const SizedBox(height: 25),
-            
-                      /// Text for register instead
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Not a member yet? ',
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface),
+                      GestureDetector(
+                        onTap: widget.onTap,
+                        child: Text(
+                          'Register now',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.bold,
                           ),
-                          GestureDetector(
-                            onTap: widget.onTap,
-                            child: Text(
-                              'Register now',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
+                        ),
+                      )
                     ],
-                  );
-                },
+                  ),
+                ],
               ),
             ),
           ),
 
           /// Loading overlay
-          BlocBuilder<AuthCubit, AuthState>(
+          BlocConsumer<AuthCubit, AuthState>(
+            listener: (context, state) {
+              /// Display errors if occurred
+              if (state is AuthError) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(state.errorMessage)));
+              }
+            },
             builder: (context, state) {
               debugPrint(state.toString());
               if (state is AuthLoading) {
@@ -190,5 +184,3 @@ class _LoginViewState extends State<LoginView> {
     super.dispose();
   }
 }
-
-

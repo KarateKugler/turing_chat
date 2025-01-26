@@ -122,8 +122,8 @@ class AuthCubit extends Cubit<AuthState> {
       /// emit Logged in state if successful
       emit(AuthLoggedIn(UserModel(
         id: response.user!.id,
-        email: response.user!.email!,
-        username: username, // lazy but works
+        email: email,
+        username: username,
       )));
     }
 
@@ -165,5 +165,10 @@ class AuthCubit extends Cubit<AuthState> {
         emit(AuthError(e.toString()));
       }
     }
+  }
+
+  /// Emit an error if we notice something went wrong.
+  void authError(String errorMessage) {
+    emit(AuthError(errorMessage));
   }
 }
