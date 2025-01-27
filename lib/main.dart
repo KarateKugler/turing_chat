@@ -7,8 +7,8 @@ import 'package:turing_chat/theme/dark_scheme.dart';
 import 'core/app_router.dart';
 import 'logic/auth_cubit.dart';
 
-/// DEV-LOG
-/// 26.01.:
+/// ## DEV-LOG
+/// ### 26.01.
 /// * started implementing the add friend by username --> if there is more information to
 ///   be stored about a particular user profile, we should add a separate table
 ///   and add read constraints, such that profile data doesn't leak.
@@ -28,7 +28,7 @@ void main() async {
   /// setup supabase (horizons/turing_chat project
   await SupabaseApi.initialize(
     anonKey:
-    '',
+        '',
   );
 
   /// set Repository SupabaseApiClient

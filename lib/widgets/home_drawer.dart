@@ -25,7 +25,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
         if (state is AuthInitial) {
           Navigator.of(context).pushNamedAndRemoveUntil(
             '/login',
-            (route) => true,
+            (route) => false,
           );
         }
       },

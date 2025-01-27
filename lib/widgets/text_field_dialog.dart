@@ -62,6 +62,5 @@ class _TextFieldDialogState extends State<TextFieldDialog> {
         ),
       ],
     );
-    ;
   }
 }
