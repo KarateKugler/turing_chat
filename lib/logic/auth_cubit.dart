@@ -36,6 +36,7 @@ class AuthCubit extends Cubit<AuthState> {
               username: username,
               id: currentSession.user.id,
               email: currentSession.user.email!,
+              createdAt: DateTime.parse(currentSession.user.createdAt),
             ),
           ));
         }
@@ -86,6 +87,7 @@ class AuthCubit extends Cubit<AuthState> {
         username: username,
         id: response.user!.id,
         email: response.user!.email!,
+        createdAt: DateTime.parse(response.user!.createdAt),
       )));
     }
 
@@ -124,6 +126,7 @@ class AuthCubit extends Cubit<AuthState> {
         id: response.user!.id,
         email: email,
         username: username,
+        createdAt: DateTime.parse(response.user!.createdAt),
       )));
     }
 
