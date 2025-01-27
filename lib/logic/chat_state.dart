@@ -1,18 +1,51 @@
 part of 'chat_cubit.dart';
 
-@immutable
-sealed class ChatState {}
-
-final class ChatInitial extends ChatState {}
-
-final class ChatLoading extends ChatState {}
-
-/// Models the state of the chat rooms
-final class ChatLoaded extends ChatState {
-  final List<ChatRoom> chatrooms;
-
-  ChatLoaded({
-    required this.chatrooms
-});
+/// The possible states of the chats feature
+enum ChatStatus {
+  initial,
+  loading,
+  success,
+  error,
 }
 
+@immutable
+final class ChatState {
+  /// The current state of the chats
+  final ChatStatus status;
+  /// The complete list of chatrooms by username and the associated contacts,
+  /// whether they are friends, requested friends, blocked or otherwise.
+  final Map<String, ChatRoom> chatroomsByUsername; // could add separate list of contacts, but introduces more room for error
+  final String? errorMessage;
+
+  const ChatState({
+    required this.status,
+    required this.chatroomsByUsername,
+    this.errorMessage,
+  });
+
+  ChatState copyWith({
+    ChatStatus? status,
+    Map<String, ChatRoom>? chatroomsByUsername,
+    String? errorMessage,
+  }) {
+    return ChatState(
+      status: status ?? this.status,
+      chatroomsByUsername: chatroomsByUsername ?? this.chatroomsByUsername,
+      errorMessage: errorMessage,
+    );
+  }
+
+  @override
+  String toString() {
+    String chatroomsString = '';
+
+    if (chatroomsByUsername.isNotEmpty) {
+      for (String username in chatroomsByUsername.keys) {
+        chatroomsString += 'ChatRoom(user: $username), ';
+      }
+    }
+    chatroomsString = '[$chatroomsString]';
+
+    return 'ChatState($status, error: $errorMessage, $chatroomsString)';
+  }
+}

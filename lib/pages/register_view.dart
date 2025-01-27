@@ -37,21 +37,22 @@ class _RegisterViewState extends State<RegisterView> {
   // Could also possibly be solved with Form, TextFormField.validator
   void _validateInputs() {
     setState(() {
-      /// Check valid Username
+      /// Check valid Username and ...
       _usernameErrorMessage = null;
-      if (!validateUsername(_usernameController.text)) {
+      if (!validateUsername(_usernameController.text.trim())) {
         _usernameErrorMessage = 'username must be $usernameRegexString, bro';
       }
+      _usernameController.text = _usernameController.text.trim();
 
-      /// Check valid E-mail
+      /// Check valid E-mail and ...
       _emailErrorMessage = null;
-      if (!validateEmail(_emailController.text)) {
+      if (!validateEmail(_emailController.text.trim())) {
         _emailErrorMessage = 'invalid e-mail. bro';
       }
-
-      _passwordErrorMessage = null;
+      _emailController.text = _emailController.text.trim();
 
       /// Check Password matching
+      _passwordErrorMessage = null;
       if (_passwordController.text != _passwordConfirmController.text) {
         _passwordErrorMessage = 'passwords don\'t match... ... bro';
       }

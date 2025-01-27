@@ -1,7 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:supabase_api/supabase_api.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
 import '../models/user.dart';
 
@@ -32,7 +32,7 @@ class AuthCubit extends Cubit<AuthState> {
           String username = await _db.getUsername(id: currentSession.user.id);
 
           emit(AuthLoggedIn(
-            UserModel(
+            User(
               username: username,
               id: currentSession.user.id,
               email: currentSession.user.email!,
@@ -82,7 +82,7 @@ class AuthCubit extends Cubit<AuthState> {
       String username = await _db.getUsername(id: response.user!.id);
 
       /// emit Logged in state if successful
-      emit(AuthLoggedIn(UserModel(
+      emit(AuthLoggedIn(User(
         username: username,
         id: response.user!.id,
         email: response.user!.email!,
@@ -120,7 +120,7 @@ class AuthCubit extends Cubit<AuthState> {
       );
 
       /// emit Logged in state if successful
-      emit(AuthLoggedIn(UserModel(
+      emit(AuthLoggedIn(User(
         id: response.user!.id,
         email: email,
         username: username,

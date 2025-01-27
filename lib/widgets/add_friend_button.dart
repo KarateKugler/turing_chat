@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:turing_chat/widgets/loading_widget.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_api/supabase_api.dart';
+import 'package:turing_chat/helpers/auth_utils.dart';
+import '../logic/chat_cubit.dart';
+import 'loading_widget.dart';
 
+import '../logic/auth_cubit.dart';
 import 'text_field_dialog.dart';
 
 class AddFriendButton extends StatefulWidget {
@@ -24,16 +29,34 @@ class _AddFriendButtonState extends State<AddFriendButton> {
           context: context,
           builder: (BuildContext context) {
             return TextFieldDialog(
-              onSubmitted: () async {
-                /// Check if username exists and show loading icon
+              /// Check if username is valid (..)
+              validator: (submitText) => validateUsername(submitText.trim()),
+              errorHint: 'invalid username',
+              onSubmitted: (submitText) async {
+                /// Try adding friend by username (..)
                 setState(() {
                   isLoading = true;
                 });
 
+                ChatCubit chatCubit = context.read<ChatCubit>();
+                AuthCubit authCubit = context.read<AuthCubit>();
+                AuthState authState = authCubit.state;
 
+                try {
+                  if (authState is AuthLoggedIn) {
+                    String userId = authState.user.id;
+                    chatCubit.addFriendByUsername(userId, submitText.trim());
+                  }
+                }
 
-                /// If yes add to chats
+                /// if the user doesn't exist,
+                on NotFoundException catch (e) {
+                  chatCubit.chatError(e.message);
+                }
 
+                catch (e) {
+                  chatCubit.chatError(e.toString());
+                }
 
                 /// if no show snack bar
 

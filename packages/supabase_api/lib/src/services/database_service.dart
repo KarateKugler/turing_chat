@@ -1,14 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:supabase_api/src/models/contact_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class NotFoundException implements Exception {
-  final String message;
-
-  NotFoundException([this.message = 'Value not found']);
-
-  @override
-  String toString() => 'NotFoundException: $message';
-}
+import '../constants.dart';
 
 class DatabaseService {
   final SupabaseClient _client; // maybe replace with client.from etc.
@@ -25,11 +18,13 @@ class DatabaseService {
     return response['username'];
   }
 
-  /// Add friend if username exists
-  Future<void> addFriendByUsername(String userId, String friendUsername) async {
+  /// Add friend if username exists (and return friendId)
+  Future<String> addFriendByUsername(
+      String userId, String friendUsername) async {
+    /// try to get user profile
     var response = await _client
         .from('profiles')
-        .select()
+        .select('username, auth_id')
         .eq('username', friendUsername)
         .maybeSingle();
 
@@ -42,8 +37,11 @@ class DatabaseService {
     await _client
         .from('friends')
         .insert({'user_id_1': userId, 'user_id_2': response['auth_id']});
+
+    return response['auth_id'];
   }
 
+  /// Add a friend by UserID (for accepting pending friend requests)
   Future<void> addFriendByUUID(String userId, String friendId) async {
     await _client
         .from('friends')

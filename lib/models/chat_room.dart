@@ -26,4 +26,33 @@ class ChatRoom {
     required this.contactScore,
     required this.contactStreak,
   });
+
+  ChatRoom copyWith({
+    Contact? contact,
+    int? userScore,
+    int? userStreak,
+    int? contactScore,
+    int? contactStreak,
+  }) {
+    return ChatRoom(
+      contact: contact ?? this.contact,
+      messages: messages,
+      userScore: userScore ?? this.userScore,
+      userStreak: userStreak ?? this.userStreak,
+      contactScore: contactScore ?? this.contactScore,
+      contactStreak: contactStreak ?? this.contactStreak,
+    );
+  }
+
+  /// only update the contact status
+  ChatRoom copyWithUpdatedContactStatus(ContactStatus contactStatus) {
+    return ChatRoom(
+      contact: contact.copyWith(contactStatus: contactStatus),
+      messages: messages,
+      userScore: userScore,
+      userStreak: userStreak,
+      contactScore: contactScore,
+      contactStreak: contactStreak,
+    );
+  }
 }

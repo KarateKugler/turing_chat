@@ -1,10 +1,13 @@
-class UserModel {
+import 'package:turing_chat/models/contact.dart';
+
+
+class User {
   final String id;
   final String email;
   final String username;
-  final List<String> friends = [];
+  final List<Contact> friends = [];
 
-  UserModel({
+  User({
     required this.id,
     required this.email,
     required this.username,
