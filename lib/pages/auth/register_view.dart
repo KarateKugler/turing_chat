@@ -1,43 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../helpers/auth_utils.dart';
-import '../logic/auth_cubit.dart';
-import '../widgets/app_logo.dart';
-import '../widgets/glass_box.dart';
-import '../widgets/login_button.dart';
-import '../widgets/login_text_field.dart';
+import '../../helpers/auth_utils.dart';
+import '../../logic/auth_cubit.dart';
+import '../../widgets/app_logo.dart';
+import '../../widgets/glass_box.dart';
+import '../../widgets/auth/login_button.dart';
+import '../../widgets/auth/login_text_field.dart';
 
-class LoginView extends StatefulWidget {
-  /// method to go to register page
+class RegisterView extends StatefulWidget {
+  /// method to go to login page
   final void Function()? onTap;
 
-  const LoginView({super.key, required this.onTap});
+  const RegisterView({super.key, required this.onTap});
 
   @override
-  State<LoginView> createState() => _LoginViewState();
+  State<RegisterView> createState() => _RegisterViewState();
 }
 
-class _LoginViewState extends State<LoginView> {
+class _RegisterViewState extends State<RegisterView> {
   /// Email and Password Text Controllers
+  final TextEditingController _usernameController = TextEditingController();
+
   final TextEditingController _emailController = TextEditingController();
 
   final TextEditingController _passwordController = TextEditingController();
 
+  final TextEditingController _passwordConfirmController =
+      TextEditingController();
+
   /// error handling
+  String? _usernameErrorMessage;
   String? _emailErrorMessage;
   String? _passwordErrorMessage;
 
+  // Could also possibly be solved with Form, TextFormField.validator
   void _validateInputs() {
     setState(() {
-      /// Check valid E-mail
-      if (!validateEmail(_emailController.text)) {
-        _emailErrorMessage = 'Invalid E-Mail.';
+      /// Check valid Username and ...
+      _usernameErrorMessage = null;
+      if (!validateUsername(_usernameController.text.trim())) {
+        _usernameErrorMessage = 'username must be $usernameRegexString, bro';
+      }
+      _usernameController.text = _usernameController.text.trim();
+
+      /// Check valid E-mail and ...
+      _emailErrorMessage = null;
+      if (!validateEmail(_emailController.text.trim())) {
+        _emailErrorMessage = 'invalid e-mail. bro';
+      }
+      _emailController.text = _emailController.text.trim();
+
+      /// Check Password matching
+      _passwordErrorMessage = null;
+      if (_passwordController.text != _passwordConfirmController.text) {
+        _passwordErrorMessage = 'passwords don\'t match... ... bro';
       }
 
       /// Check Password length
-      if (_passwordController.text.length < 8) {
-        _passwordErrorMessage = 'Password must be at least 8 characters long.';
+      else if (_passwordController.text.length < 8) {
+        _passwordErrorMessage = 'password must be at least 8 characters long.';
       }
     });
   }
@@ -60,7 +82,7 @@ class _LoginViewState extends State<LoginView> {
 
                   /// Welcome Back message
                   Text(
-                    'Welcome Back to ratatouille!',
+                    'welcome back',
                     style: TextStyle(
                       // put into theme data
                       color: Theme.of(context).colorScheme.primary,
@@ -70,12 +92,25 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 25),
 
-                  /// Email-Field
-                  // todo: add username option
+                  /// Username-field
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 25.0),
                     child: LoginTextField(
-                      hintText: 'E-Mail',
+                      hintText: 'username',
+                      obscureText: false,
+                      controller: _usernameController,
+                      errorText: _usernameErrorMessage,
+                      // prefixIcon: Icons.email,
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  /// Email-Field
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                    child: LoginTextField(
+                      hintText: 'e-mail',
                       obscureText: false,
                       controller: _emailController,
                       errorText: _emailErrorMessage,
@@ -89,9 +124,23 @@ class _LoginViewState extends State<LoginView> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 25.0),
                     child: LoginTextField(
-                      hintText: 'Password',
+                      hintText: 'password',
                       obscureText: true,
                       controller: _passwordController,
+                      errorText: _passwordErrorMessage != null ? '' : null,
+                      // prefixIcon: Icons.lock,
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  /// Confirm Password
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                    child: LoginTextField(
+                      hintText: 'confirm password',
+                      obscureText: true,
+                      controller: _passwordConfirmController,
                       errorText: _passwordErrorMessage,
                       // prefixIcon: Icons.lock,
                     ),
@@ -99,9 +148,9 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 25),
 
-                  /// Login Button
+                  /// Register Button
                   LoginButton(
-                    text: 'Login',
+                    text: 'Register',
                     onTap: () async {
                       /// Check the Inputs
                       _validateInputs();
@@ -112,7 +161,8 @@ class _LoginViewState extends State<LoginView> {
                         final AuthCubit authCubit = context.read<AuthCubit>();
 
                         /// try login
-                        await authCubit.logInWithEmailPassword(
+                        await authCubit.signUpWithUsernameEmailPassword(
+                          username: _usernameController.text,
                           email: _emailController.text,
                           password: _passwordController.text,
                         );
@@ -129,14 +179,14 @@ class _LoginViewState extends State<LoginView> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Not a member yet? ',
+                        'Already a member? ',
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.onSurface),
                       ),
                       GestureDetector(
                         onTap: widget.onTap,
                         child: Text(
-                          'Register now',
+                          'Login here',
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onSurface,
                             fontWeight: FontWeight.bold,
@@ -175,12 +225,5 @@ class _LoginViewState extends State<LoginView> {
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 }
