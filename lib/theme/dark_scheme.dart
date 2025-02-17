@@ -1,6 +1,49 @@
+
+/// A Material 3 (M3) dark theme implementation that follows Google's latest design system guidelines.
+/// Emphasizes accessibility, consistent component behavior, and systematic color application
+/// while maintaining the fundamental M3 principles of dynamic color, tone mapping, and contrast modes.
+///
+/// This theme adheres to M3's core color roles and their relationships:
+/// - Key Colors: Primary, Secondary, Tertiary, and Error
+/// - Neutral Keys: Background and Surface
+/// - Content Colors: On-colors for each key color
+library;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+
+/// M3 ColorScheme implementation following the color system's role-based approach.
+/// Each color serves a specific purpose in the interface:
+///
+/// Primary colors:
+/// - primary: Main brand color, used for prominent UI elements
+/// - onPrimary: Content color appearing on primary color
+/// - primaryContainer: Used for less prominent components
+/// - onPrimaryContainer: Content color for primaryContainer
+///
+/// Secondary colors:
+/// - secondary: Used for less prominent components
+/// - onSecondary: Content color appearing on secondary color
+/// - secondaryContainer: Used for lower emphasis components
+/// - onSecondaryContainer: Content color for secondaryContainer
+///
+/// Tertiary colors:
+/// - tertiary: Used for contrast and balancing
+/// - onTertiary: Content color appearing on tertiary color
+/// - tertiaryContainer: Used for subtle variations
+/// - onTertiaryContainer: Content color for tertiaryContainer
+///
+/// Error colors:
+/// - error: Used for error states and validation
+/// - onError: Content color appearing on error color
+///
+/// Neutral colors:
+/// - background: Main app background
+/// - onBackground: Primary content color
+/// - surface: Component surface color
+/// - onSurface: Primary content color on surface
+/// - surfaceVariant: Alternative surface color
+/// - onSurfaceVariant: Content color for surfaceVariant
 const darkColorScheme = ColorScheme.dark(
   primary: Color(0xFF6E4FFF),        // Very dark purple
   onPrimary: Colors.white,
@@ -30,6 +73,34 @@ const darkColorScheme = ColorScheme.dark(
   onSurfaceVariant: Colors.white54,
 );
 
+/// M3 Typography implementation using the type scale system.
+/// Follows M3's systematic approach to type scaling and hierarchy:
+///
+/// Display (Large, Medium, Small):
+/// - Used for the largest text elements
+/// - Typically headlines and hero text
+///
+/// Headline (Large, Medium, Small):
+/// - Used for content section headers
+/// - Provides clear visual hierarchy
+///
+/// Title (Large, Medium, Small):
+/// - Used for UI component headers
+/// - More prominent than body text
+///
+/// Body (Large, Medium, Small):
+/// - Used for primary content text
+/// - Optimized for readability
+///
+/// Label (Large, Medium, Small):
+/// - Used for component labels and captions
+/// - Typically smaller and more compact
+///
+/// Each text style maintains M3's recommended:
+/// - Size relationships
+/// - Weight distributions
+/// - Letter spacing
+/// - Line heights
 final terminalDarkTheme = ThemeData(
   colorScheme: darkColorScheme,
   typography: Typography.material2021(),

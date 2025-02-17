@@ -23,6 +23,7 @@ class _AddFriendButtonState extends State<AddFriendButton> {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
+      backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
       onPressed: () {
         /// Add a new Chat Room per username
         showDialog(
@@ -32,6 +33,11 @@ class _AddFriendButtonState extends State<AddFriendButton> {
               /// Check if username is valid (..)
               validator: (submitText) => validateUsername(submitText.trim()),
               errorHint: 'invalid username',
+              titleText: 'add a friend',
+              hintText: 'username_001',
+              submitText: 'add',
+
+              /// After submitted
               onSubmitted: (submitText) async {
                 /// Try adding friend by username (..)
                 setState(() {
@@ -64,9 +70,6 @@ class _AddFriendButtonState extends State<AddFriendButton> {
                   isLoading = false;
                 });
               },
-              titleText: 'add a friend',
-              hintText: 'username_001',
-              submitText: 'add',
             );
           },
         );

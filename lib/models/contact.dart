@@ -6,7 +6,30 @@ enum ContactStatus {
   requestedIn,
   friend,
   blocked,
-  reported,
+  error;
+
+  static ContactStatus fromFlags(
+      {required bool blocked,
+        required bool friendIn,
+        required bool friendOut}) {
+    if (blocked) {
+      return ContactStatus.blocked;
+    }
+
+    if (friendIn && friendOut) {
+      return ContactStatus.friend;
+    }
+
+    if (friendIn) {
+      return ContactStatus.requestedIn;
+    }
+
+    if (friendOut) {
+      return ContactStatus.requestedOut;
+    }
+
+    return ContactStatus.error;
+  }
 }
 
 class Contact {
@@ -42,5 +65,17 @@ class Contact {
       friendsSince: friendsSince ?? this.friendsSince,
       contactStatus: contactStatus ?? this.contactStatus,
     );
+  }
+
+  static Contact fromModel(ContactModel data) {
+    return Contact(
+        id: data.contactId,
+        email: null,
+        username: data.username,
+        friendsSince: data.createdAt,
+        contactStatus: ContactStatus.fromFlags(
+            blocked: data.blocked,
+            friendIn: data.friendRequestedIn,
+            friendOut: data.friendRequestedOut));
   }
 }

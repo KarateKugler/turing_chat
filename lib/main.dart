@@ -19,7 +19,16 @@ import 'logic/auth_cubit.dart';
 /// * implemented sql functions to get contacts depending on if its mutual or outgoing/incoming friend request
 /// * refactored all the namings to be snake case in postgres
 /// * added necessary auth permissions/policies
-/// *
+///
+/// * added user card to the settings page
+///
+/// ### 27.01.
+/// * ordered a new credit card for the open ai api.
+///
+/// ### 16.02.
+/// * ordered a new credit card from a different bank cause postbank sucks ass
+/// * slight UI changes to home page
+/// * todo: make chatrooms functional
 ///
 /// todo: refactor showsnackbar into ui util function
 

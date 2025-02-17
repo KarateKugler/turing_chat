@@ -1,8 +1,10 @@
 import 'package:bloc/bloc.dart';
-import 'package:meta/meta.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_api/supabase_api.dart';
+import 'package:turing_chat/models/contact.dart';
 
 import '../models/chat_room.dart';
+import '../models/user.dart';
 
 part 'chat_state.dart';
 
@@ -55,4 +57,54 @@ class ChatCubit extends Cubit<ChatState> {
 
       String friendId = await _db.addFriendByUsername(userId, friendUsername);
 
+      ChatRoom? chatroom = state.chatroomsByUsername[friendUsername];
+
+      /// if this works, two possiblities:
+
+      /// this is a new contact, and the user just sent a friend request
+      if (chatroom == null) {
+        ChatRoom newChatroom = ChatRoom(
+          contact: Contact(
+            id: friendId,
+            email: null,
+            username: friendUsername,
+            friendsSince: DateTime.now(),
+            contactStatus: ContactStatus.requestedOut,
+          ),
+          messages: [],
+          userScore: 0,
+          userStreak: 0,
+          contactScore: 0,
+          contactStreak: 0,
+        );
+        state.chatroomsByUsername.addAll({friendUsername: newChatroom});
+      }
+
+      /// the user just accepted a friend request
+      else {
+        /// update contact status
+        state.chatroomsByUsername[friendUsername] = state
+            .chatroomsByUsername[friendUsername]!
+            .copyWithUpdatedContactStatus(ContactStatus.friend);
+      }
+
+      emit(state.copyWith(status: ChatStatus.success));
+
+      // todo: add more logic for case of contact being blocked or reported
+    }
+
+    /// Error if username was not found
+    on NotFoundException catch (e) {
+      emit(state.copyWith(errorMessage: 'username not found'));
+    }
+
+    /// other error
+    catch (e) {
+      emit(state.copyWith(errorMessage: 'unexpected error occured: $e'));
+    }
+  }
+
+  void chatError(String errorMessage) {
+    emit(state.copyWith(status: ChatStatus.error, errorMessage: errorMessage));
+  }
 }

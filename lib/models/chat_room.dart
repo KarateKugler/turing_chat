@@ -1,3 +1,5 @@
+import 'package:supabase_api/supabase_api.dart';
+
 import 'contact.dart';
 import 'message.dart';
 
@@ -53,6 +55,18 @@ class ChatRoom {
       userStreak: userStreak,
       contactScore: contactScore,
       contactStreak: contactStreak,
+    );
+  }
+
+  // todo scrap later
+  static ChatRoom fromContactModel(ContactModel data) {
+    return ChatRoom(
+      contact: Contact.fromModel(data),
+      messages: null,
+      userScore: data.userScore,
+      userStreak: data.userStreak,
+      contactScore: data.contactScore,
+      contactStreak: data.contactStreak,
     );
   }
 }

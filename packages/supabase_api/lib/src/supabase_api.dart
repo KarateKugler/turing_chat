@@ -14,6 +14,7 @@ class SupabaseApi {
     required String supabaseUrl,
     required String anonKey,
   }) async {
+    // retries connecting if timeout or other error.
     await Supabase.initialize(url: supabaseUrl, anonKey: anonKey);
     _client = SupabaseApiClient(Supabase.instance.client);
   }

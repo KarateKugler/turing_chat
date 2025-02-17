@@ -48,6 +48,46 @@ class DatabaseService {
         .insert({'user_id_1': userId, 'user_id_2': friendId});
   }
 
+  /// Fetch all contacts
+  Future<List<ContactModel>> fetchContacts(String userId) async {
+    /// Mutuals (Friend out and Friend in)
+    List? response =
+        await _client.rpc('get_mutuals', params: {'user_id': userId});
+
+    List<ContactModel> contactsMutual = response
+            ?.map((entry) => ContactModel.fromJson(
+                json: entry, friendIn: true, friendOut: true))
+            .toList() ??
+        [];
+
+    /// Outgoing friend requests (but not accepted)
+    response = await _client.rpc('get_contacts_out', params: {'user_id': userId});
+
+    List<ContactModel> contactsOut = response
+            ?.map((entry) => ContactModel.fromJson(
+                json: entry, friendIn: false, friendOut: true))
+            .toList() ??
+        [];
+
+    /// Ingoing friend requests (but not accepted)
+    response = await _client.rpc('get_contacts_in', params: {'user_id': userId});
+
+    List<ContactModel> contactsIn = response
+            ?.map((entry) => ContactModel.fromJson(
+                json: entry, friendIn: true, friendOut: false))
+            .toList() ??
+        [];
+
+    /// combine
+    List<ContactModel> contacts = [
+      ...contactsMutual,
+      ...contactsIn,
+      ...contactsOut
+    ];
+
+    return contacts;
+  }
+
   /// listen to messages in chat with email
 
   /// send message
