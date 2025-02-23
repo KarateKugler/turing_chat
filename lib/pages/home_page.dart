@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:turing_chat/logic/auth_cubit.dart';
 import 'package:turing_chat/logic/chat_cubit.dart';
 import 'package:turing_chat/widgets/contact_tile.dart';
@@ -53,7 +54,8 @@ class _HomePageState extends State<HomePage> {
                     child: ContactTile(
                       text: entry.key,
                       onTap: () {
-
+                        // Navigate to chat room with the chatroom data
+                        context.push('/chat/${entry.value.contact.id}', extra: entry.value);
                       },
                     ),
                   );
@@ -85,10 +87,9 @@ class _HomePageState extends State<HomePage> {
       ChatCubit chatCubit = context.read<ChatCubit>();
       chatCubit.init(user: authState.user);
 
-      // authCubit.authError(
-      //     'there was an error with the authentication. try logging in again.');
-      // Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false,);
-      // return;
+      // If not logged in, redirect to login
+      } else {
+        context.go('/login');
     }
   }
 }

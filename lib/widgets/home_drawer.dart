@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:turing_chat/logic/auth_cubit.dart';
 import 'package:turing_chat/widgets/loading_widget.dart';
 
@@ -23,10 +24,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
         /// When logged out, and AuthInitial is emitted, go back to Login
 
         if (state is AuthInitial) {
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            '/login',
-            (route) => false,
-          );
+          context.go('/login');
         }
       },
       child: Drawer(
@@ -49,8 +47,8 @@ class _HomeDrawerState extends State<HomeDrawer> {
               text: 'H O M E',
               icon: Icon(Icons.home),
               onTap: () {
-                Navigator.pop(context);
-                // Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false,);
+                context.pop();
+                context.go('/');
               },
             ),
 
@@ -61,7 +59,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
               text: 'S E T T I N G S',
               icon: Icon(Icons.settings),
               onTap: () {
-                Navigator.of(context).pushNamed('/settings');
+                context.push('/settings');
               },
             ),
 

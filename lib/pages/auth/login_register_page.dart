@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../logic/auth_cubit.dart';
 import 'login_view.dart';
 import 'register_view.dart';
@@ -30,10 +31,7 @@ class _LoginOrRegisterPageState extends State<LoginOrRegisterPage> {
       listener: (context, state) {
         debugPrint(state.toString());
         if (state is AuthLoggedIn) {
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            '/',
-            (route) => false,
-          );
+          context.go('/');
         }
       },
       child: (showLoginView) // todo: refactor redundancies

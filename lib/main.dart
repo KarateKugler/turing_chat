@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_api/supabase_api.dart';
 import 'package:turing_chat/logic/chat_cubit.dart';
 import 'package:turing_chat/theme/dark_scheme.dart';
+import 'package:go_router/go_router.dart';
 
 import 'core/app_router.dart';
 import 'logic/auth_cubit.dart';
@@ -93,16 +94,13 @@ class TuringChatApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Ratatouille',
       theme: ThemeData(
         colorScheme: darkColorScheme,
         useMaterial3: true,
       ),
-      onGenerateRoute: AppRouter.generateRoute,
-      initialRoute: activeSession ? '/' : '/login',
-      // todo: caching user credentials,
-      // todo: auth gate,
+      routerConfig: AppRouter.router,
     );
   }
 }
