@@ -132,4 +132,27 @@ class ChatCubit extends Cubit<ChatState> {
   void chatError(String errorMessage) {
     emit(state.copyWith(status: ChatStatus.error, errorMessage: errorMessage));
   }
+
+  /// send a message to a contact
+  Future<void> sendMessage(
+      {required String contactId, required String content}) async {
+    User user = state.currentUser!;
+
+    ///
+    try {
+      _db.sendMessage(
+        userId: user.id,
+        contactId: contactId,
+        content: content,
+      );
+    }
+
+    ///
+    catch (e) {
+      debugPrint(e.toString());
+      emit(state.copyWith(errorMessage: e.toString()));
+    }
+  }
+
+  /// request a generated message and send to a contact
 }

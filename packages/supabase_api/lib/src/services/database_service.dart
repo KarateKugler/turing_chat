@@ -61,7 +61,8 @@ class DatabaseService {
         [];
 
     /// Outgoing friend requests (but not accepted)
-    response = await _client.rpc('get_contacts_out', params: {'user_id': userId});
+    response =
+        await _client.rpc('get_contacts_out', params: {'user_id': userId});
 
     List<ContactModel> contactsOut = response
             ?.map((entry) => ContactModel.fromJson(
@@ -70,7 +71,8 @@ class DatabaseService {
         [];
 
     /// Ingoing friend requests (but not accepted)
-    response = await _client.rpc('get_contacts_in', params: {'user_id': userId});
+    response =
+        await _client.rpc('get_contacts_in', params: {'user_id': userId});
 
     List<ContactModel> contactsIn = response
             ?.map((entry) => ContactModel.fromJson(
@@ -88,7 +90,34 @@ class DatabaseService {
     return contacts;
   }
 
+  /// fetch messages for a chat room initially.
+
   /// listen to messages in chat with email
 
   /// send message
+  ///
+  /// todo: enable sending null, to show '...' writing in progress (idea)
+  /// -> (returns Future<String> of message id and then override when actually sending)
+  Future<void> sendMessage({
+    required String userId,
+    required String contactId,
+    required String content,
+  }) async {
+    /// Try sending
+    try {
+      await _client.from('messages').insert({
+        'sender_id': userId,
+        'receiver_id': contactId,
+        'content': content,
+        'generated': false,
+        'identified': false,
+      });
+    } catch (e) {
+      // todo handle specific error types
+      rethrow;
+    }
+  }
+
+  /// generate message
+// todo
 }

@@ -31,6 +31,17 @@ import 'logic/auth_cubit.dart';
 /// * slight UI changes to home page
 /// * todo: make chatrooms functional
 ///
+/// ### 23.02.
+/// * started working with Cline in VSCode to dish out the UI more quickly
+/// * chat room page started with message bubble (no functionality yet)
+///
+/// ### 24.02.
+/// * added chat input field and send/generate button
+/// * refactored chat cubit (and associated function calls) to store and use
+///   user data separately in state and not depend on auth cubit
+/// * checked gemini api pricing, has free tier actually (15 RPM, 1Mil TPM,
+///   1.500 RPD, so more than enough for testing purposes.)
+/// * (also added a slide transition to the chat room navigation for funsies)
 /// todo: refactor showsnackbar into ui util function
 
 
