@@ -45,14 +45,9 @@ class _AddFriendButtonState extends State<AddFriendButton> {
                 });
 
                 ChatCubit chatCubit = context.read<ChatCubit>();
-                AuthCubit authCubit = context.read<AuthCubit>();
-                AuthState authState = authCubit.state;
 
                 try {
-                  if (authState is AuthLoggedIn) {
-                    String userId = authState.user.id;
-                    chatCubit.addFriendByUsername(userId, submitText.trim());
-                  }
+                  chatCubit.addFriendByUsername(submitText.trim());
                 }
 
                 /// if the user doesn't exist,

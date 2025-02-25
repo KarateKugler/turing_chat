@@ -7,6 +7,11 @@ import '../models/user.dart';
 
 part 'auth_state.dart';
 
+/// The Cubit that is responsible for managing the basic authentication state
+/// of the app, i.e. whether the user is logged in or not.
+/// (Mainly responsible for gating the home page and handling sign in/sign up
+/// /sign out tasks etc. Shouldn't be called for getting the user id or user
+/// name)
 class AuthCubit extends Cubit<AuthState> {
   final AuthService _auth;
   final DatabaseService _db;

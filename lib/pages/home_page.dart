@@ -78,14 +78,13 @@ class _HomePageState extends State<HomePage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    /// initialize the chat cubit with the user model from authstate
+    /// initialize the chat cubit if logged in
     AuthCubit authCubit = context.read<AuthCubit>();
     AuthState authState = authCubit.state;
 
     /// If not logged in, something went wrong
     if (authState is AuthLoggedIn) {
-      ChatCubit chatCubit = context.read<ChatCubit>();
-      chatCubit.init(user: authState.user);
+      context.read<ChatCubit>().init();
 
       // If not logged in, redirect to login
       } else {

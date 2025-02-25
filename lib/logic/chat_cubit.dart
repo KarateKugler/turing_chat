@@ -16,15 +16,27 @@ class ChatCubit extends Cubit<ChatState> {
   ChatCubit(this._auth, this._db)
       : super(ChatState(
           status: ChatStatus.initial,
+          currentUser: null,
           chatroomsByUsername: {},
         ));
 
-  /// Initialize the ChatCubit with the [User] Model from auth
-  void init({required User user}) async {
-    /// ...
+  /// Initialize the ChatCubit
+  /// (only called if Authenticated, so current session is ensured)
+  void init() async {
     emit(state.copyWith(status: ChatStatus.loading));
 
     try {
+      final currentUser = _auth.currentSession!.user;
+
+      // Get username from database and create User model
+      final username = await _db.getUsername(id: currentUser.id);
+      final user = User(
+        id: currentUser.id,
+        email: currentUser.email!,
+        username: username,
+        createdAt: DateTime.parse(currentUser.createdAt),
+      );
+
       /// we get the list of contacts
       List<ContactModel> contactData = await _db.fetchContacts(user.id);
       debugPrint(contactData.toString());
@@ -38,7 +50,10 @@ class ChatCubit extends Cubit<ChatState> {
       }
 
       emit(state.copyWith(
-          chatroomsByUsername: chatrooms, status: ChatStatus.success));
+        currentUser: user,
+        chatroomsByUsername: chatrooms,
+        status: ChatStatus.success,
+      ));
     }
 
     /// ...
@@ -50,12 +65,21 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   /// Add a new friend by username
-  Future<void> addFriendByUsername(String userId, String friendUsername) async {
+  Future<void> addFriendByUsername(String friendUsername) async {
     /// Try finding by username and adding
     try {
       emit(state.copyWith(status: ChatStatus.loading));
 
-      String friendId = await _db.addFriendByUsername(userId, friendUsername);
+      if (state.currentUser == null) {
+        emit(state.copyWith(
+          status: ChatStatus.error,
+          errorMessage: 'No authenticated user found',
+        ));
+        return;
+      }
+
+      String friendId =
+          await _db.addFriendByUsername(state.currentUser!.id, friendUsername);
 
       ChatRoom? chatroom = state.chatroomsByUsername[friendUsername];
 
@@ -104,6 +128,7 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
+  /// emit a chat error state directly
   void chatError(String errorMessage) {
     emit(state.copyWith(status: ChatStatus.error, errorMessage: errorMessage));
   }
