@@ -1,7 +1,6 @@
-import 'package:bloc/bloc.dart';
-import 'package:meta/meta.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_api/supabase_api.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+import 'package:flutter/foundation.dart';
 
 import '../models/user.dart';
 
@@ -22,26 +21,25 @@ class AuthCubit extends Cubit<AuthState> {
     /// Try getting a valid session
     try {
       /// Refreshes the session to check if user still exists
-      AuthResponse response = await _auth
-          .refreshSession(); // shouldn't be necessary in prod-level app
+      await _auth.refreshSession(); // shouldn't be necessary in prod-level app
       // todo: remove
 
       /// Check if valid session
-      Session? currentSession = _auth.currentSession;
-
-      if (currentSession != null) {
+      if (_auth.sessionActive) {
         /// Check if Session isn't expired
-        if (!currentSession.isExpired) {
+        if (!_auth.sessionExpired) {
+          final userData = _auth.userData!;
+
           /// Get username from database
           // todo: use hydrated cubit instead
-          String username = await _db.getUsername(id: currentSession.user.id);
+          String username = await _db.getUsername(id: userData['id']!);
 
           emit(AuthLoggedIn(
             User(
               username: username,
-              id: currentSession.user.id,
-              email: currentSession.user.email!,
-              createdAt: DateTime.parse(currentSession.user.createdAt),
+              id: userData['id']!,
+              email: userData['email']!,
+              createdAt: DateTime.parse(userData['created_at']!),
             ),
           ));
         }
@@ -55,9 +53,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
 
     /// catch any errors
-    on AuthException catch (e) {
-      emit(AuthError(e.message));
-    } catch (e) {
+    catch (e) {
       emit(AuthError(e.toString()));
     }
   }
@@ -80,26 +76,26 @@ class AuthCubit extends Cubit<AuthState> {
 
     /// try logging in
     try {
-      AuthResponse response = await _auth.signInWithEmailPassword(
+      await _auth.signInWithEmailPassword(
         email: email,
         password: password,
       );
 
-      String username = await _db.getUsername(id: response.user!.id);
+      final userData = _auth.userData!;
+
+      String username = await _db.getUsername(id: userData['id']!);
 
       /// emit Logged in state if successful
       emit(AuthLoggedIn(User(
         username: username,
-        id: response.user!.id,
-        email: response.user!.email!,
-        createdAt: DateTime.parse(response.user!.createdAt),
+        id: userData['id']!,
+        email: userData['email']!,
+        createdAt: DateTime.parse(userData['created_at']),
       )));
     }
 
     /// emit Error state if failed
-    on AuthException catch (e) {
-      emit(AuthError(e.message));
-    } catch (e) {
+    catch (e) {
       emit(AuthError(e.toString()));
     }
   }
@@ -119,26 +115,26 @@ class AuthCubit extends Cubit<AuthState> {
 
     /// try signing up
     try {
-      AuthResponse response = await _auth.signUpWithUsernameEmailPassword(
+      await _auth.signUpWithUsernameEmailPassword(
         username: username,
         email: email,
         password: password,
         phone: phone,
       );
 
+      final userData = _auth.userData!;
+
       /// emit Logged in state if successful
       emit(AuthLoggedIn(User(
-        id: response.user!.id,
-        email: email,
         username: username,
-        createdAt: DateTime.parse(response.user!.createdAt),
+        id: userData['id']!,
+        email: userData['email']!,
+        createdAt: DateTime.parse(userData['created_at']),
       )));
     }
 
     /// emit Error state if failed
-    on AuthException catch (e) {
-      emit(AuthError(e.message));
-    } catch (e) {
+    catch (e) {
       emit(AuthError(e.toString()));
     }
   }

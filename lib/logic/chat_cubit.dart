@@ -1,4 +1,4 @@
-import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_api/supabase_api.dart';
 import 'package:turing_chat/models/contact.dart';
@@ -21,20 +21,20 @@ class ChatCubit extends Cubit<ChatState> {
         ));
 
   /// Initialize the ChatCubit
-  /// (only called if Authenticated, so current session is ensured)
+  /// (only called if Authenticated, so active session is ensured)
   void init() async {
     emit(state.copyWith(status: ChatStatus.loading));
 
     try {
-      final currentUser = _auth.currentSession!.user;
+      final userData = _auth.userData!;
 
       // Get username from database and create User model
-      final username = await _db.getUsername(id: currentUser.id);
+      final username = await _db.getUsername(id: userData['id']!);
       final user = User(
-        id: currentUser.id,
-        email: currentUser.email!,
+        id: userData['id']!,
+        email: userData['email']!,
         username: username,
-        createdAt: DateTime.parse(currentUser.createdAt),
+        createdAt: DateTime.parse(userData['created_at']!),
       );
 
       /// we get the list of contacts
@@ -118,7 +118,7 @@ class ChatCubit extends Cubit<ChatState> {
     }
 
     /// Error if username was not found
-    on NotFoundException catch (e) {
+    on NotFoundException {
       emit(state.copyWith(errorMessage: 'username not found'));
     }
 

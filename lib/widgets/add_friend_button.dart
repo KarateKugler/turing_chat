@@ -5,7 +5,6 @@ import 'package:turing_chat/helpers/auth_utils.dart';
 import '../logic/chat_cubit.dart';
 import 'loading_widget.dart';
 
-import '../logic/auth_cubit.dart';
 import 'text_field_dialog.dart';
 
 class AddFriendButton extends StatefulWidget {

@@ -5,32 +5,55 @@ class AuthService {
 
   AuthService(this._auth);
 
-  Session? get currentSession => _auth.currentSession;
+  bool get sessionActive => _auth.currentSession != null;
 
-  Future<AuthResponse> refreshSession() async {
-    return await _auth.refreshSession();
+  /// returns true if session is null
+  bool get sessionExpired => _auth.currentSession?.isExpired ?? true;
+
+  // artifact of not using a repository layer, just deal with it
+  /// Returns the raw user data of the current session:
+  ///
+  /// e.g.
+  /// ```dart
+  /// {
+  ///  'id': '1234-5678-9012-3456',
+  ///  'email': '
+  ///  'created_at': '2021-09-01T12:00:00.000Z'
+  /// }
+  /// ```
+  /// or null if no session is active
+  Map<String, dynamic>? get userData => _auth.currentSession != null
+      ? {
+          'id': _auth.currentUser!.id,
+          'email': _auth.currentUser!.email,
+          'created_at': _auth.currentUser!.createdAt
+        }
+      : null;
+
+  Future<void> refreshSession() async {
+    AuthResponse response = await _auth.refreshSession();
   }
 
   /// Sign in with E-Mail and password
-  Future<AuthResponse> signInWithEmailPassword({
+  Future<void> signInWithEmailPassword({
     required String email,
     required String password,
   }) async {
-    return await _auth.signInWithPassword(
+    AuthResponse response = await _auth.signInWithPassword(
       email: email,
       password: password,
     );
   }
 
   /// Sign up with E-Mail and password (phone is optional)
-  Future<AuthResponse> signUpWithUsernameEmailPassword({
+  Future<void> signUpWithUsernameEmailPassword({
     required String username,
     required String email,
     required String password,
     String? phone,
   }) async {
     /// Send SignUp data to supabase with username metadata
-    return await _auth.signUp(
+    AuthResponse response = await _auth.signUp(
       email: email,
       password: password,
       phone: phone,
