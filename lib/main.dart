@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_api/supabase_api.dart';
 import 'package:turing_chat/logic/chat_cubit.dart';
 import 'package:turing_chat/theme/dark_scheme.dart';
@@ -47,8 +48,8 @@ import 'logic/auth_cubit.dart';
 void main() async {
   /// setup supabase (horizons/turing_chat project
   await SupabaseApi.initialize(
-    anonKey:
-        '',
+    supabaseUrl: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
   /// set Repository SupabaseApiClient
