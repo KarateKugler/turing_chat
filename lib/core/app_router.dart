@@ -45,11 +45,34 @@ class AppRouter {
       ),
       GoRoute(
         path: '/chat/:id',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final chatRoom = state.extra as ChatRoom;
-          return ChatRoomPage(chatRoom: chatRoom);
+
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: ChatRoomPage(chatRoom: chatRoom),
+            transitionDuration: const Duration(milliseconds: 150),
+            reverseTransitionDuration: const Duration(milliseconds: 150),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0); // Slide from right
+              const end = Offset.zero; // End position
+              const curve = Curves.easeInOut;
+
+              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              var reverseTween = Tween(begin: Offset.zero, end: begin).chain(CurveTween(curve: curve));
+
+              return SlideTransition(
+                position: animation.drive(tween), // Push animation
+                child: SlideTransition(
+                  position: secondaryAnimation.drive(reverseTween), // Pop animation
+                  child: child,
+                ),
+              );
+            },
+          );
         },
       ),
+
     ],
   );
 }
