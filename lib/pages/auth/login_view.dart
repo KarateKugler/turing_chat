@@ -31,11 +31,13 @@ class _LoginViewState extends State<LoginView> {
   void _validateInputs() {
     setState(() {
       /// Check valid E-mail
+      _emailErrorMessage = null;
       if (!validateEmail(_emailController.text)) {
         _emailErrorMessage = 'Invalid E-Mail.';
       }
 
       /// Check Password length
+      _passwordErrorMessage = null;
       if (_passwordController.text.length < 8) {
         _passwordErrorMessage = 'Password must be at least 8 characters long.';
       }
