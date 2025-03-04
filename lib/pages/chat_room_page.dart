@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:turing_chat/widgets/chat_input_field.dart';
+import 'package:turing_chat/widgets/glass_box.dart';
 
 import '../logic/chat_cubit.dart';
 import '../models/chat_room.dart';
 import '../models/message.dart';
+import '../widgets/blur_widget.dart';
 import '../widgets/message_bubble.dart';
 
 /// The Chat Room page
@@ -39,6 +41,8 @@ class ChatRoomPage extends StatefulWidget {
 
 class _ChatRoomPageState extends State<ChatRoomPage> {
   late final TextEditingController _messageController;
+  Message? _selectedMessage;
+  Widget? _selectedMessageBubble;
 
   @override
   void initState() {
@@ -50,6 +54,31 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   void dispose() {
     _messageController.dispose();
     super.dispose();
+  }
+
+  void _handleMessageLongPress(Message message, Widget messageBubble) {
+    setState(() {
+      _selectedMessage = message;
+      _selectedMessageBubble = messageBubble;
+    });
+  }
+
+  void _handleTapOutside() {
+    setState(() {
+      _selectedMessage = null;
+      _selectedMessageBubble = null;
+    });
+  }
+
+  void _handleExposeAction() {
+    // This would be implemented to handle the "Expose" action
+    // For now, just dismiss the blur
+    _handleTapOutside();
+
+    // In a real implementation, you would:
+    // 1. Send a request to the backend to check if the message was generated
+    // 2. Update the UI based on the response
+    // 3. Update scores, etc.
   }
 
   @override
@@ -103,112 +132,122 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     ];
     //chatRoom.messages;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.chatRoom.contact.username),
-        actions: [
-          // Score display
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            title: Text(widget.chatRoom.contact.username),
+            actions: [
+              // Score display
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
                   children: [
-                    Text(
-                      'You: ${widget.chatRoom.userScore}',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 12,
-                      ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'You: ${widget.chatRoom.userScore}',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          '🔥 ${widget.chatRoom.userStreak}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
                     ),
-                    Text(
-                      '🔥 ${widget.chatRoom.userStreak}',
-                      style: const TextStyle(fontSize: 12),
+                    const SizedBox(width: 16),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Them: ${widget.chatRoom.contactScore}',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          '🔥 ${widget.chatRoom.contactStreak}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-                const SizedBox(width: 16),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Them: ${widget.chatRoom.contactScore}',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 12,
-                      ),
-                    ),
-                    Text(
-                      '🔥 ${widget.chatRoom.contactStreak}',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      body: messages == null || messages.isEmpty
-          ? Center(
-              child: Text(
-                'No messages yet',
-                style: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 ),
               ),
-            )
-          : BlocListener<ChatCubit, ChatState>(
-              listener: (context, state) {
-                if (state.errorMessage != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(state.errorMessage!)));
-                }
-              },
-              child: Column(
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      child: CustomScrollView(
-                        reverse: true, // Show latest messages at the bottom
-                        slivers: [
-                          SliverPadding(
-                            padding: const EdgeInsets.only(top: 8, bottom: 8),
-                            sliver: SliverList(
-                              delegate: SliverChildBuilderDelegate(
-                                (context, index) {
-                                  final message =
-                                      messages[messages.length - index - 1];
-                                  return MessageBubble(message: message);
-                                },
-                                childCount: messages.length,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+            ],
+          ),
+          body: messages == null || messages.isEmpty
+              ? Center(
+                  child: Text(
+                    'No messages yet',
+                    style: TextStyle(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6),
                     ),
                   ),
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                          top: 8.0, left: 8.0, right: 8.0, bottom: 16.0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: ChatInputField(
-                                controller: _messageController,
-                                onChanged: (_) {
-                                  setState(() {});
-                                  debugPrint(_messageController.text);
-                                }),
-                          ),
-                          SizedBox(width: 8),
-                          FloatingActionButton(
-                            onPressed: () {
-                              final message = _messageController.text.trim();
+                )
+              : Column(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        child: CustomScrollView(
+                          reverse: true, // Show latest messages at the bottom
+                          slivers: [
+                            SliverPadding(
+                              padding: const EdgeInsets.only(top: 8, bottom: 8),
+                              sliver: SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, index) {
+                                    final message =
+                                        messages[messages.length - index - 1];
+                                    // Create a key for this message bubble to ensure it's unique
+                                    final key = ValueKey(message.id);
+
+                                    /// Create the message bubble
+                                    final messageBubble = MessageBubble(
+                                      key: key,
+                                      message: message,
+                                      onLongPress: () => _handleMessageLongPress(
+                                        message,
+                                        MessageBubble(message: message),
+                                      ),
+                                    );
+
+                                    return messageBubble;
+                                  },
+                                  childCount: messages.length,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                            top: 8.0, left: 8.0, right: 8.0, bottom: 16.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: ChatInputField(
+                                  controller: _messageController,
+                                  onChanged: (_) {
+                                    setState(() {});
+                                    debugPrint(_messageController.text);
+                                  }),
+                            ),
+                            SizedBox(width: 8),
+                            FloatingActionButton(
+                              onPressed: () {
+                                final message = _messageController.text.trim();
 
                               /// Send the message if just typed
                               if (message.isNotEmpty) {
@@ -219,28 +258,35 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                 _messageController.clear();
                               }
 
-                              /// Otherwise send generation request
-                              else {
-                                debugPrint('Generate!');
-                                // todo
-                              }
-                            },
-                            child: Icon(
-                                _messageController.text.isEmpty
-                                    ? Icons.psychology
-                                    : Icons.send,
-                                size: 25),
-                            shape: CircleBorder(),
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primary,
-                          ),
-                        ],
+                                /// Otherwise send generation request
+                                else {
+                                  debugPrint('Generate!');
+                                  // todo
+                                }
+                              },
+                              child: Icon(
+                                  _messageController.text.isEmpty
+                                      ? Icons.psychology
+                                      : Icons.send,
+                                  size: 25),
+                              shape: CircleBorder(),
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                  ],
+                ),
+        ),
+
+        // The blur/ fcs overlay
+        BlurWidget(
+          messageBubble: _selectedMessageBubble,
+          onAction: _handleExposeAction,
+        ),
+      ],
     );
   }
 }

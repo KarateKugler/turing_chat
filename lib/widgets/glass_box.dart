@@ -9,17 +9,20 @@ class GlassBox extends StatelessWidget {
   final double? borderRadius;
   final List<Color>? gradientColors;
   final Border? border;
+  final Widget? background;
   final Widget? child;
 
-  const GlassBox(
-      {super.key,
-      required this.blur,
-      this.width,
-      this.height,
-      this.borderRadius,
-      this.gradientColors,
-      this.border,
-      this.child});
+  const GlassBox({
+    super.key,
+    required this.blur,
+    this.width,
+    this.height,
+    this.borderRadius,
+    this.gradientColors,
+    this.border,
+    this.child,
+    this.background,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +33,9 @@ class GlassBox extends StatelessWidget {
         height: height,
         child: Stack(
           children: [
+            /// background
+            background ?? const SizedBox.shrink(),
+
             /// Blur effect
             BackdropFilter(
               filter: ImageFilter.blur(
@@ -52,8 +58,8 @@ class GlassBox extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: gradientColors ??
                       [
-                        const Color(0xFF353535),
-                        const Color(0xFF2C2C2C),
+                        const Color(0x3F353535),
+                        const Color(0x402C2C2C),
                       ],
                 ),
               ),

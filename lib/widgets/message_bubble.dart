@@ -6,9 +6,13 @@ import '../models/message.dart';
 class MessageBubble extends StatelessWidget {
   final Message message;
 
+  /// Should show some pop up bbls to just drag and select (like pinterest)
+  final void Function()? onLongPress;
+
   const MessageBubble({
     super.key,
     required this.message,
+    this.onLongPress,
   });
 
   @override
@@ -51,47 +55,73 @@ class MessageBubble extends StatelessWidget {
           horizontal: 16,
           vertical: 4,
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: bubbleColor,
-            borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(16),
-              topRight: const Radius.circular(16),
-              bottomLeft: Radius.circular(isUserMessage ? 16 : 0),
-              bottomRight: Radius.circular(isUserMessage ? 0 : 16),
-            ),
-            border: Border.all(
-              color: borderColor,
-              width: message.generated ? 2 : 0,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: shadowColor,
-                blurRadius: 8,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: textAlignment,
-            children: [
-              Text(
-                message.content,
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 16,
+        child: GestureDetector(
+          onLongPress: onLongPress,
+          child: Hero(
+            tag:
+                'message_bubble_${message.id}', // Unique tag based on message ID
+            flightShuttleBuilder: (
+              BuildContext flightContext,
+              Animation<double> animation,
+              HeroFlightDirection flightDirection,
+              BuildContext fromHeroContext,
+              BuildContext toHeroContext,
+            ) {
+              // Custom transition builder to control the animation
+              return Material(
+                color: Colors.transparent,
+                child: ScaleTransition(
+                  scale: animation.drive(
+                    Tween<double>(begin: 1.0, end: 1.0)
+                        .chain(CurveTween(curve: Curves.easeInOut)),
+                  ),
+                  child: toHeroContext.widget,
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                timeago.format(message.createdAt),
-                style: TextStyle(
-                  color: textColor.withOpacity(0.7),
-                  fontSize: 12,
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: bubbleColor,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(16),
+                  topRight: const Radius.circular(16),
+                  bottomLeft: Radius.circular(isUserMessage ? 16 : 0),
+                  bottomRight: Radius.circular(isUserMessage ? 0 : 16),
                 ),
+                border: Border.all(
+                  color: borderColor,
+                  width: message.generated ? 2 : 0,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: shadowColor,
+                    blurRadius: 8,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
-            ],
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: textAlignment,
+                children: [
+                  Text(
+                    message.content,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    timeago.format(message.createdAt),
+                    style: TextStyle(
+                      color: textColor.withOpacity(0.7),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
