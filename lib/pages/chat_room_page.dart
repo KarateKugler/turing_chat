@@ -83,6 +83,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   @override
   Widget build(BuildContext context) {
+    /// Placeholder messages for testing
     List<Message>? messages = [
       Message(
         id: '1',

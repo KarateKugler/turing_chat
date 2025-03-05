@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage> {
               }
             },
             builder: (context, state) {
-              debugPrint(state.toString());
+              debugPrint(state.toString()); //todo rmv
               return ListView.builder(
                 itemCount: state.chatroomsByUsername.length,
                 itemBuilder: (context, index) {
