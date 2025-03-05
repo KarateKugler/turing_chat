@@ -110,7 +110,7 @@ class DatabaseService {
         'receiver_id': contactId,
         'content': content,
         'generated': false,
-        'identified': false,
+        'identified': null,
       });
     } catch (e) {
       // todo handle specific error types

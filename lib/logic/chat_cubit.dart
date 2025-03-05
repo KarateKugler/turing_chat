@@ -1,5 +1,5 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_api/supabase_api.dart';
 import 'package:turing_chat/models/contact.dart';
 
@@ -134,8 +134,10 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   /// send a message to a contact
-  Future<void> sendMessage(
-      {required String contactId, required String content}) async {
+  Future<void> sendMessage({
+    required String contactId,
+    required String content,
+  }) async {
     User user = state.currentUser!;
 
     ///

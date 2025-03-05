@@ -95,6 +95,8 @@ import 'logic/auth_cubit.dart';
 /// ...
 
 void main() async {
+  await dotenv.load();
+
   /// setup supabase (horizons/turing_chat project
   await SupabaseApi.initialize(
     supabaseUrl: dotenv.env['SUPABASE_URL']!,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:turing_chat/widgets/chat_input_field.dart';
-import 'package:turing_chat/widgets/glass_box.dart';
+import 'package:turing_chat/widgets/loading_widget.dart';
 
 import '../logic/chat_cubit.dart';
 import '../models/chat_room.dart';
@@ -181,104 +181,129 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
               ),
             ],
           ),
-          body: messages == null || messages.isEmpty
-              ? Center(
-                  child: Text(
-                    'No messages yet',
-                    style: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.6),
-                    ),
-                  ),
-                )
-              : Column(
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        child: CustomScrollView(
-                          reverse: true, // Show latest messages at the bottom
-                          slivers: [
-                            SliverPadding(
-                              padding: const EdgeInsets.only(top: 8, bottom: 8),
-                              sliver: SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    final message =
-                                        messages[messages.length - index - 1];
-                                    // Create a key for this message bubble to ensure it's unique
-                                    final key = ValueKey(message.id);
 
-                                    /// Create the message bubble
-                                    final messageBubble = MessageBubble(
-                                      key: key,
-                                      message: message,
-                                      onLongPress: () => _handleMessageLongPress(
-                                        message,
-                                        MessageBubble(message: message),
-                                      ),
-                                    );
-
-                                    return messageBubble;
-                                  },
-                                  childCount: messages.length,
-                                ),
+          /// Page body
+          body: Column(
+            children: [
+              /// Sliver list of messages
+              Expanded(
+                child: ClipRRect(
+                  child: BlocBuilder<ChatCubit, ChatState>(
+                    builder: (context, state) {
+                      /// Loading
+                      if (state.status == ChatStatus.loading) {
+                        return Center(
+                          child: LoadingWidget(),
+                        ); // shimmer effect messages
+                      }
+                      /// loaded
+                      else {
+                        /// No msgs
+                        if (messages == null || messages.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'No messages yet',
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.6),
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                            top: 8.0, left: 8.0, right: 8.0, bottom: 16.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: ChatInputField(
-                                  controller: _messageController,
-                                  onChanged: (_) {
-                                    setState(() {});
-                                    debugPrint(_messageController.text);
-                                  }),
-                            ),
-                            SizedBox(width: 8),
-                            FloatingActionButton(
-                              onPressed: () {
-                                final message = _messageController.text.trim();
+                          );
+                        }
 
-                              /// Send the message if just typed
-                              if (message.isNotEmpty) {
-                                context.read<ChatCubit>().sendMessage(
-                                      contactId: widget.chatRoom.contact.id,
-                                      content: message,
-                                    );
-                                _messageController.clear();
-                              }
+                        /// msgs present
+                        else {
+                          return CustomScrollView(
+                            reverse: true, // Show latest messages at the bottom
+                            slivers: [
+                              SliverPadding(
+                                padding:
+                                    const EdgeInsets.only(top: 8, bottom: 8),
+                                sliver: SliverList(
+                                  delegate: SliverChildBuilderDelegate(
+                                    (context, index) {
+                                      final message =
+                                          messages[messages.length - index - 1];
+                                      // Create a key for this message bubble to ensure it's unique
+                                      final key = ValueKey(message.id);
 
-                                /// Otherwise send generation request
-                                else {
-                                  debugPrint('Generate!');
-                                  // todo
-                                }
-                              },
-                              child: Icon(
-                                  _messageController.text.isEmpty
-                                      ? Icons.psychology
-                                      : Icons.send,
-                                  size: 25),
-                              shape: CircleBorder(),
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.primary,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                                      /// Create the message bubble
+                                      final messageBubble = MessageBubble(
+                                        key: key,
+                                        message: message,
+                                        onLongPress: () =>
+                                            _handleMessageLongPress(
+                                          message,
+                                          MessageBubble(message: message),
+                                        ),
+                                      );
+
+                                      return messageBubble;
+                                    },
+                                    childCount: messages.length,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                      }
+                    },
+                  ),
                 ),
+              ),
+
+              /// Text Input and action button
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                      top: 8.0, left: 8.0, right: 8.0, bottom: 16.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ChatInputField(
+                            controller: _messageController,
+                            onChanged: (_) {
+                              setState(() {});
+                              debugPrint(_messageController.text);
+                            }),
+                      ),
+                      SizedBox(width: 8),
+                      FloatingActionButton(
+                        onPressed: () {
+                          final message = _messageController.text.trim();
+
+                          /// Send the message if just typed
+                          if (message.isNotEmpty) {
+                            context.read<ChatCubit>().sendMessage(
+                                  contactId: widget.chatRoom.contact.id,
+                                  content: message,
+                                );
+                            _messageController.clear();
+                          }
+
+                          /// Otherwise send generation request
+                          else {
+                            debugPrint('Generate!');
+                            // todo
+                          }
+                        },
+                        child: Icon(
+                            _messageController.text.isEmpty
+                                ? Icons.psychology
+                                : Icons.send,
+                            size: 25),
+                        shape: CircleBorder(),
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
 
         // The blur/ fcs overlay
