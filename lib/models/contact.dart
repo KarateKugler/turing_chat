@@ -5,15 +5,22 @@ enum ContactStatus {
   requestedOut,
   requestedIn,
   friend,
-  blocked,
+  blockedIn,
+  blockedOut,
   error;
 
-  static ContactStatus fromFlags(
-      {required bool blocked,
-        required bool friendIn,
-        required bool friendOut}) {
-    if (blocked) {
-      return ContactStatus.blocked;
+  static ContactStatus fromFlags({
+    required bool blockedIn,
+    required bool blockedOut,
+    required bool friendIn,
+    required bool friendOut,
+  }) {
+    if (blockedOut) {
+      return ContactStatus.blockedOut;
+    }
+
+    if (blockedIn) {
+      return ContactStatus.blockedIn;
     }
 
     if (friendIn && friendOut) {
@@ -74,7 +81,8 @@ class Contact {
         username: data.username,
         friendsSince: data.createdAt,
         contactStatus: ContactStatus.fromFlags(
-            blocked: data.blocked,
+            blockedIn: data.blockedIn,
+            blockedOut: data.blockedOut,
             friendIn: data.friendRequestedIn,
             friendOut: data.friendRequestedOut));
   }

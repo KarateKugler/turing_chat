@@ -35,7 +35,7 @@ class DatabaseService {
 
     /// add contact to database
     await _client
-        .from('friends')
+        .from('contacts')
         .insert({'user_id_1': userId, 'user_id_2': response['auth_id']});
 
     return response['auth_id'];
@@ -44,7 +44,7 @@ class DatabaseService {
   /// Add a friend by UserID (for accepting pending friend requests)
   Future<void> addFriendByUUID(String userId, String friendId) async {
     await _client
-        .from('friends')
+        .from('contacts')
         .insert({'user_id_1': userId, 'user_id_2': friendId});
   }
 

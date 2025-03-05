@@ -3,7 +3,8 @@
 class ContactModel {
   final bool friendRequestedIn;
   final bool friendRequestedOut;
-  final bool blocked;
+  final bool blockedIn;
+  final bool blockedOut;
   final String contactId;
   final String username;
   final int userScore;
@@ -15,7 +16,8 @@ class ContactModel {
   ContactModel({
     required this.friendRequestedIn,
     required this.friendRequestedOut,
-    required this.blocked,
+    required this.blockedIn,
+    required this.blockedOut,
     required this.contactId,
     required this.username,
     required this.userScore,
@@ -33,13 +35,14 @@ class ContactModel {
     return ContactModel(
       friendRequestedIn: friendIn,
       friendRequestedOut: friendOut,
-      blocked: json['blocked'],
+      blockedIn: json['blocked_in'] ?? false,
+      blockedOut: json['blocked_out'] ?? false,
       contactId: json['contact_id'],
       username: json['username'],
-      userScore: json['user_1_score'],
-      contactScore: json['user_2_score'],
-      userStreak: json['user_1_streak'],
-      contactStreak: json['user_2_streak'],
+      userScore: json['sender_score'] ?? 0,
+      contactScore: json['sender_streak'] ?? 0,
+      userStreak: json['receiver_score'] ?? 0,
+      contactStreak: json['receiver_streak'] ?? 0,
       createdAt: DateTime.parse(json['created_at']),
     );
   }

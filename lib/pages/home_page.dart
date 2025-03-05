@@ -20,13 +20,10 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme
-          .of(context)
-          .colorScheme
-          .surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       drawer: HomeDrawer(),
       appBar: AppBar(
-        title: Text('⌘  t u r i n g . c h a t  ⍜'),
+        title: Text('⌘  t u r i n g __ c h a t  ⍜'),
         centerTitle: true,
       ),
       body: BlocListener<AuthCubit, AuthState>(
@@ -43,19 +40,20 @@ class _HomePageState extends State<HomePage> {
               debugPrint(state.toString());
               return ListView.builder(
                 itemCount: state.chatroomsByUsername.length,
-
                 itemBuilder: (context, index) {
-                  MapEntry<String, ChatRoom> entry = state.chatroomsByUsername
-                      .entries.elementAt(index);
+                  MapEntry<String, ChatRoom> entry =
+                      state.chatroomsByUsername.entries.elementAt(index);
 
                   /// The List of Chat Rooms with Friends
                   return Padding(
                     padding: const EdgeInsets.all(4.0),
                     child: ContactTile(
                       text: entry.key,
+                      status: entry.value.contact.contactStatus,
                       onTap: () {
                         // Navigate to chat room with the chatroom data
-                        context.push('/chat/${entry.value.contact.id}', extra: entry.value);
+                        context.push('/chat/${entry.value.contact.id}',
+                            extra: entry.value);
                       },
                     ),
                   );
@@ -87,8 +85,8 @@ class _HomePageState extends State<HomePage> {
       context.read<ChatCubit>().init();
 
       // If not logged in, redirect to login
-      } else {
-        context.go('/login');
+    } else {
+      context.go('/login');
     }
   }
 }
