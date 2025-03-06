@@ -19,31 +19,34 @@ class MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Determine bubble alignment and style based on sender
-    final isUserMessage = message.sentByUser;
+    /// align
     final alignment =
-        isUserMessage ? Alignment.centerRight : Alignment.centerLeft;
-    final textAlignment =
-        isUserMessage ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+        message.sentByUser ? Alignment.centerRight : Alignment.centerLeft;
+    final textAlignment = CrossAxisAlignment.start;
 
-    // Base bubble color based on sender
-    final bubbleColor = isUserMessage
-        ? colorScheme.secondary.withOpacity(0.8)
-        : colorScheme.tertiary.withOpacity(0.8);
+    /// fill col
+    final bubbleColor = message.sentByUser
+        ? colorScheme.secondary.withAlpha(200)
+        : colorScheme.tertiary.withAlpha(200);
 
-    // Text color based on bubble color
+    /// text col
     final textColor =
-        isUserMessage ? colorScheme.onSecondary : colorScheme.onTertiary;
+        message.sentByUser ? colorScheme.onSecondary : colorScheme.onTertiary;
 
-    // Border color for AI generated messages
-    final borderColor = message.generated
-        ? (message.correclyIdentified ? colorScheme.primary : colorScheme.error)
-        : Colors.transparent;
+    /// border
+    final border = (message.correctlyIdentified != null && message.generated)
+        ? Border.all(
+            color: Theme.of(context).colorScheme.primary,
+            width: 2,
+          )
+        : null;
 
-    // Glow color for correctly identified messages
-    final shadowColor = message.correclyIdentified
-        ? Colors.greenAccent.withOpacity(0.4)
-        : Colors.transparent;
+    /// glow
+    final shadowColor = message.correctlyIdentified == null
+        ? Colors.transparent
+        : (message.correctlyIdentified!
+            ? Colors.greenAccent.withAlpha(100) // or blueAccent
+            : Theme.of(context).colorScheme.error.withAlpha(100));
 
     return Align(
       alignment: alignment,
@@ -57,70 +60,44 @@ class MessageBubble extends StatelessWidget {
         ),
         child: GestureDetector(
           onLongPress: onLongPress,
-          child: Hero(
-            tag:
-                'message_bubble_${message.id}', // Unique tag based on message ID
-            flightShuttleBuilder: (
-              BuildContext flightContext,
-              Animation<double> animation,
-              HeroFlightDirection flightDirection,
-              BuildContext fromHeroContext,
-              BuildContext toHeroContext,
-            ) {
-              // Custom transition builder to control the animation
-              return Material(
-                color: Colors.transparent,
-                child: ScaleTransition(
-                  scale: animation.drive(
-                    Tween<double>(begin: 1.0, end: 1.0)
-                        .chain(CurveTween(curve: Curves.easeInOut)),
-                  ),
-                  child: toHeroContext.widget,
-                ),
-              );
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: bubbleColor,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isUserMessage ? 16 : 0),
-                  bottomRight: Radius.circular(isUserMessage ? 0 : 16),
-                ),
-                border: Border.all(
-                  color: borderColor,
-                  width: message.generated ? 2 : 0,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: shadowColor,
-                    blurRadius: 8,
-                    spreadRadius: 2,
-                  ),
-                ],
+          child: Container(
+            decoration: BoxDecoration(
+              color: bubbleColor,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(16),
+                topRight: const Radius.circular(16),
+                bottomLeft: Radius.circular(message.sentByUser ? 16 : 0),
+                bottomRight: Radius.circular(message.sentByUser ? 0 : 16),
               ),
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: textAlignment,
-                children: [
-                  Text(
-                    message.content,
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 16,
-                    ),
+              border: border,
+              boxShadow: [
+                BoxShadow(
+                  color: shadowColor,
+                  blurRadius: 10,
+                  spreadRadius: 3,
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: textAlignment,
+              children: [
+                Text(
+                  message.content,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 16,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    timeago.format(message.createdAt),
-                    style: TextStyle(
-                      color: textColor.withOpacity(0.7),
-                      fontSize: 12,
-                    ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  timeago.format(message.createdAt),
+                  style: TextStyle(
+                    color: textColor.withOpacity(0.7),
+                    fontSize: 12,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
