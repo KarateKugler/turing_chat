@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:turing_chat/models/contact.dart';
 import 'package:turing_chat/widgets/chat_input_field.dart';
 import 'package:turing_chat/widgets/loading_widget.dart';
 
@@ -48,6 +50,12 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   void initState() {
     super.initState();
     _messageController = TextEditingController();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // context.read<ChatCubit>().
   }
 
   @override
@@ -197,6 +205,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                           child: LoadingWidget(),
                         ); // shimmer effect messages
                       }
+
                       /// loaded
                       else {
                         /// No msgs
@@ -257,50 +266,96 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
               ),
 
               /// Text Input and action button
+              /// (or accept request, if ChatStatus.requestedIn)
               Center(
                 child: Padding(
                   padding: const EdgeInsets.only(
                       top: 8.0, left: 8.0, right: 8.0, bottom: 16.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: ChatInputField(
-                            controller: _messageController,
-                            onChanged: (_) {
-                              setState(() {});
-                              debugPrint(_messageController.text);
-                            }),
-                      ),
-                      SizedBox(width: 8),
-                      FloatingActionButton(
-                        onPressed: () {
-                          final message = _messageController.text.trim();
+                  child:
 
-                          /// Send the message if just typed
-                          if (message.isNotEmpty) {
-                            context.read<ChatCubit>().sendMessage(
-                                  contactId: widget.chatRoom.contact.id,
-                                  content: message,
-                                );
-                            _messageController.clear();
-                          }
+                      /// If the contact has requested to chat, show the accept button
+                      widget.chatRoom.contact.contactStatus ==
+                              ContactStatus.requestedIn
+                          ? SizedBox(
+                              width: double.infinity,
+                              child: FloatingActionButton.extended(
+                                backgroundColor:
+                                    Theme.of(context).colorScheme.primary,
+                                onPressed: () async {
+                                  /// get chat cubit and add the contact as a new
+                                  /// friend by username
+                                  ChatCubit chatCubit =
+                                      context.read<ChatCubit>();
+                                  await chatCubit.addFriendByUsername(
+                                      widget.chatRoom.contact.username);
 
-                          /// Otherwise send generation request
-                          else {
-                            debugPrint('Generate!');
-                            // todo
-                          }
-                        },
-                        child: Icon(
-                            _messageController.text.isEmpty
-                                ? Icons.psychology
-                                : Icons.send,
-                            size: 25),
-                        shape: CircleBorder(),
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                      ),
-                    ],
-                  ),
+                                  /// refresh chat room
+                                  chatCubit.init();
+
+                                  // todo: use state mgmt and refresh page with bloc builder
+                                  if (context.mounted) {
+                                    context.pop();
+                                  }
+                                },
+                                icon: Icon(
+                                  Icons.check_circle_outline,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                ),
+                                label: Text(
+                                  '<3 accept request <3',
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.onPrimary,
+                                  ),
+                                ),
+                              ),
+                            )
+
+                          /// Otherwise show the text input and send button
+                          : Row(
+                              children: [
+                                Expanded(
+                                  child: ChatInputField(
+                                      controller: _messageController,
+                                      onChanged: (_) {
+                                        setState(() {});
+                                        debugPrint(_messageController.text);
+                                      }),
+                                ),
+                                SizedBox(width: 8),
+                                FloatingActionButton(
+                                  onPressed: () {
+                                    final message =
+                                        _messageController.text.trim();
+
+                                    /// Send the message if just typed
+                                    if (message.isNotEmpty) {
+                                      context.read<ChatCubit>().sendMessage(
+                                            contactId:
+                                                widget.chatRoom.contact.id,
+                                            content: message,
+                                          );
+                                      _messageController.clear();
+                                    }
+
+                                    /// Send generation request
+                                    else {
+                                      debugPrint('Generate!');
+                                      // todo
+                                    }
+                                  },
+                                  child: Icon(
+                                      _messageController.text.isEmpty
+                                          ? Icons.psychology
+                                          : Icons.send,
+                                      size: 25),
+                                  shape: CircleBorder(),
+                                  backgroundColor:
+                                      Theme.of(context).colorScheme.primary,
+                                ),
+                              ],
+                            ),
                 ),
               ),
             ],

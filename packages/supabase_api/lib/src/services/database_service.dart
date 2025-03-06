@@ -36,7 +36,7 @@ class DatabaseService {
     /// add contact to database
     await _client
         .from('contacts')
-        .insert({'user_id_1': userId, 'user_id_2': response['auth_id']});
+        .insert({'sender_id': userId, 'receiver_id': response['auth_id']});
 
     return response['auth_id'];
   }
