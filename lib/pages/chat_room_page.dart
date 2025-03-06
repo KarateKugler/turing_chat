@@ -179,38 +179,46 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
                         /// msgs present
                         else {
-                          return CustomScrollView(
-                            reverse: true, // Show latest messages at the bottom
-                            slivers: [
-                              SliverPadding(
-                                padding:
-                                    const EdgeInsets.only(top: 8, bottom: 8),
-                                sliver: SliverList(
-                                  delegate: SliverChildBuilderDelegate(
-                                    (context, index) {
-                                      final message =
-                                          messages[messages.length - index - 1];
-                                      // Create a key for this message bubble to ensure it's unique
-                                      final key = ValueKey(message.id);
+                          return RefreshIndicator(
+                            onRefresh: () async {
+                              await context.read<ChatCubit>().fetchMessages(
+                                  widget.chatRoom.contact.username);
+                            },
 
-                                      /// Create the message bubble
-                                      final messageBubble = MessageBubble(
-                                        key: key,
-                                        message: message,
-                                        onLongPress: () =>
-                                            _handleMessageLongPress(
-                                          message,
-                                          MessageBubble(message: message),
-                                        ),
-                                      );
+                            child: CustomScrollView(
+                              reverse: true,
+                              // Show latest messages at the bottom
+                              slivers: [
+                                SliverPadding(
+                                  padding:
+                                      const EdgeInsets.only(top: 8, bottom: 8),
+                                  sliver: SliverList(
+                                    delegate: SliverChildBuilderDelegate(
+                                      (context, index) {
+                                        final message = messages[
+                                            messages.length - index - 1];
+                                        // Create a key for this message bubble to ensure it's unique
+                                        final key = ValueKey(message.id);
 
-                                      return messageBubble;
-                                    },
-                                    childCount: messages.length,
+                                        /// Create the message bubble
+                                        final messageBubble = MessageBubble(
+                                          key: key,
+                                          message: message,
+                                          onLongPress: () =>
+                                              _handleMessageLongPress(
+                                            message,
+                                            MessageBubble(message: message),
+                                          ),
+                                        );
+
+                                        return messageBubble;
+                                      },
+                                      childCount: messages.length,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           );
                         }
                       }
@@ -298,6 +306,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                       debugPrint('Generate!');
                                       // todo
                                     }
+
+                                    /// and refresh todo: not ugly
+                                    context.read<ChatCubit>().fetchMessages(
+                                        widget.chatRoom.contact.username);
                                   },
                                   child: Icon(
                                       _messageController.text.isEmpty
