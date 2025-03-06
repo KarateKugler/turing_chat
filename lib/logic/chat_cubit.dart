@@ -4,6 +4,7 @@ import 'package:supabase_api/supabase_api.dart';
 import 'package:turing_chat/models/contact.dart';
 
 import '../models/chat_room.dart';
+import '../models/message.dart';
 import '../models/user.dart';
 
 part 'chat_state.dart';
@@ -41,12 +42,17 @@ class ChatCubit extends Cubit<ChatState> {
       List<ContactModel> contactData = await _db.fetchContacts(user.id);
       debugPrint(contactData.toString());
 
-      /// get chatroom list with contacts, scores and streaks and emit if it worked
-      // todo: also get messages
-
+      /// ..
       Map<String, ChatRoom> chatrooms = {};
       for (ContactModel entry in contactData) {
+        /// score, streak, contact data
         chatrooms[entry.username] = ChatRoom.fromContactModel(entry);
+
+        /// msgs
+        List<MessageModel> messageData = await _db.fetchMessages(
+            userId: userData['id'], contactId: entry.contactId);
+        chatrooms[entry.username]!.messages.addAll(
+            messageData.map((e) => Message.fromModel(e, user.id)).toList());
       }
 
       emit(state.copyWith(
@@ -157,4 +163,24 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   /// request a generated message and send to a contact
+
+  /// fetch/refresh msgs for one contact
+  Future<void> fetchMessages(String contactName) async {
+    emit(state.copyWith(status: ChatStatus.loading));
+
+    try {
+      List<MessageModel> messageData = await _db.fetchMessages(
+              userId: state.currentUser!.id,
+              contactId: state.chatroomsByUsername[contactName]!.contact.id);
+
+      state.chatroomsByUsername[contactName]!.messages.clear();
+      state.chatroomsByUsername[contactName]!.messages.addAll(
+              messageData.map((e) => Message.fromModel(e, state.currentUser!.id)));
+
+      emit(state.copyWith(status: ChatStatus.success));
+    } catch (e) {
+      debugPrint(e.toString());
+      emit(state.copyWith(status: ChatStatus.error, errorMessage: e.toString()));
+    }
+  }
 }

@@ -1,7 +1,7 @@
-import 'package:supabase_api/src/models/contact_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants.dart';
+import '../models/models.dart';
 
 class DatabaseService {
   final SupabaseClient _client; // maybe replace with client.from etc.
@@ -90,7 +90,29 @@ class DatabaseService {
     return contacts;
   }
 
-  /// fetch messages for a chat room initially.
+  /// fetch all messages for a chat room.
+  // maybe invert, and get latest msgs first, then invert rendering in chatroom page
+  Future<List<MessageModel>> fetchMessages({
+    required String userId,
+    required String contactId,
+  }) async {
+    try {
+      final response = await _client
+          .from('messages')
+          .select()
+          .or('and(sender_id.eq.$userId,receiver_id.eq.$contactId),'
+              'and(sender_id.eq.$contactId,receiver_id.eq.$userId)')
+          .order('created_at', ascending: true);
+
+      return response.map((e) => MessageModel.fromJson(e)).toList();
+    }
+
+    ///
+    catch (e) {
+      // todo handle specific error types
+      rethrow;
+    }
+  }
 
   /// listen to messages in chat with email
 
@@ -119,5 +141,5 @@ class DatabaseService {
   }
 
   /// generate message
-// todo
+  // todo
 }

@@ -92,53 +92,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   @override
   Widget build(BuildContext context) {
     /// Placeholder messages for testing
-    List<Message>? messages = [
-      Message(
-        id: '1',
-        profileId: context.read<ChatCubit>().state.currentUser!.id,
-        content: 'Hello void.',
-        createdAt: DateTime.now().subtract(Duration(days: 15)),
-        sentByUser: false,
-        generated: false,
-        correclyIdentified: false,
-      ),
-      Message(
-        id: '2',
-        profileId: widget.chatRoom.contact.id,
-        content: 'Hello000ooo0101100010100000',
-        createdAt: DateTime.now().subtract(Duration(minutes: 10)),
-        sentByUser: true,
-        generated: false,
-        correclyIdentified: false,
-      ),
-      Message(
-        id: '3',
-        profileId: widget.chatRoom.contact.id,
-        content: 'generated/not identified',
-        createdAt: DateTime.now().subtract(Duration(minutes: 5)),
-        sentByUser: true,
-        generated: true,
-        correclyIdentified: false,
-      ),
-      Message(
-        id: '4',
-        profileId: widget.chatRoom.contact.id,
-        content: 'generated/identified',
-        createdAt: DateTime.now().subtract(Duration(minutes: 5)),
-        sentByUser: true,
-        generated: true,
-        correclyIdentified: true,
-      ),
-      Message(
-        id: '5',
-        profileId: widget.chatRoom.contact.id,
-        content: 'not generated/identified',
-        createdAt: DateTime.now().subtract(Duration(minutes: 5)),
-        sentByUser: true,
-        generated: false,
-        correclyIdentified: true,
-      ),
-    ];
+    List<Message> messages = widget.chatRoom.messages;
     //chatRoom.messages;
 
     return Stack(
@@ -209,7 +163,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                       /// loaded
                       else {
                         /// No msgs
-                        if (messages == null || messages.isEmpty) {
+                        if (messages.isEmpty) {
                           return Center(
                             child: Text(
                               'No messages yet',

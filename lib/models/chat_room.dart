@@ -6,7 +6,7 @@ import 'message.dart';
 class ChatRoom {
   /// The contact of the user
   final Contact contact;
-  final List<Message>? messages;
+  final List<Message> messages;
 
   /// How many points the user has scored
   final int userScore;
@@ -62,7 +62,7 @@ class ChatRoom {
   static ChatRoom fromContactModel(ContactModel data) {
     return ChatRoom(
       contact: Contact.fromModel(data),
-      messages: null,
+      messages: [],
       userScore: data.userScore,
       userStreak: data.userStreak,
       contactScore: data.contactScore,
