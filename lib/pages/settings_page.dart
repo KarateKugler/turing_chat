@@ -56,7 +56,7 @@ class SettingsPage extends StatelessWidget {
                         SizedBox(height: 16.0,),
                         Text('e-mail: ${authState.user.email}'),
                         SizedBox(height: 16.0,),
-                        Text('friends: ${authState.user.friends.length}'),
+                        Text('friends: ${authState.user.friends.length}'), // todo
                         SizedBox(height: 16.0,),
                         Text('joined: ${timeago.format(authState.user.createdAt)}'),
                       ],
