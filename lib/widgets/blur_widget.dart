@@ -25,7 +25,7 @@ final glowColor = Color(0xA35F00FF);
 class BlurWidget extends StatefulWidget {
   /// The selected message bubble to display prominently when blurred.
   /// If null, no blur effect is applied and the child is displayed normally.
-  Widget? messageBubble;
+  final Widget? messageBubble;
 
   /// Optional callback function for actions performed on the selected message bubble.
   final VoidCallback? onAction;
@@ -53,6 +53,7 @@ class _BlurWidgetState extends State<BlurWidget>
   late AnimationController _controller;
   late Animation<double> _blurAnimation;
   late Animation<double> _opacityAnimation;
+  bool _active = false;
 
   @override
   void initState() {
@@ -77,25 +78,28 @@ class _BlurWidgetState extends State<BlurWidget>
   void didUpdateWidget(covariant BlurWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.messageBubble == null && widget.messageBubble != null) {
+    if (widget.messageBubble != oldWidget.messageBubble) {
       _controller.forward();
+      setState(() {
+        _active = true;
+      });
     }
   }
 
   void _onTapOutside() {
     _controller.reverse();
 
-    // unfocus by removing msgbbl
+    // unfocus
     Future.delayed(widget.animationDuration).then((_) {
       setState(() {
-        widget.messageBubble = null;
+        _active = false;
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.messageBubble != null) {
+    if (widget.messageBubble != null && _active) {
       return AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
