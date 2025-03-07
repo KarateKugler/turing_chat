@@ -29,7 +29,7 @@ class ChatCubit extends Cubit<ChatState> {
     try {
       final userData = _auth.userData!;
 
-      // Get username from database and create User model
+      /// Get username from database and create User model
       final username = await _db.getUsername(id: userData['id']!);
       final user = User(
         id: userData['id']!,
@@ -38,8 +38,28 @@ class ChatCubit extends Cubit<ChatState> {
         createdAt: DateTime.parse(userData['created_at']!),
       );
 
+      /// add to state
+      emit(state.copyWith(
+          currentUser: user));
+
+      /// fetch contacts initially
+      fetchContacts();
+    }
+
+    /// ...
+    catch (e) {
+      emit(
+          state.copyWith(status: ChatStatus.error, errorMessage: e.toString()));
+      debugPrint(e.toString());
+    }
+  }
+
+  /// fetch/refrsh all cntcts.
+  Future<void> fetchContacts() async {
+    emit(state.copyWith(status: ChatStatus.loading));
+    try {
       /// we get the list of contacts
-      List<ContactModel> contactData = await _db.fetchContacts(user.id);
+      List<ContactModel> contactData = await _db.fetchContacts(state.currentUser!.id);
       debugPrint(contactData.toString());
 
       /// ..
@@ -47,16 +67,9 @@ class ChatCubit extends Cubit<ChatState> {
       for (ContactModel entry in contactData) {
         /// score, streak, contact data
         chatrooms[entry.username] = ChatRoom.fromContactModel(entry);
-
-        /// msgs
-        List<MessageModel> messageData = await _db.fetchMessages(
-            userId: userData['id'], contactId: entry.contactId);
-        chatrooms[entry.username]!.messages.addAll(
-            messageData.map((e) => Message.fromModel(e, user.id)).toList());
       }
 
       emit(state.copyWith(
-        currentUser: user,
         chatroomsByUsername: chatrooms,
         status: ChatStatus.success,
       ));

@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -55,7 +58,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // context.read<ChatCubit>().
+    ChatCubit chatCubit = context.read<ChatCubit>();
+    chatCubit.fetchMessages(widget.chatRoom.contact.username);
   }
 
   @override
@@ -64,12 +68,16 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     super.dispose();
   }
 
+  /// msg bubble
+
   void _handleMessageLongPress(Message message, Widget messageBubble) {
     setState(() {
       _selectedMessage = message;
       _selectedMessageBubble = messageBubble;
     });
   }
+
+  /// blur wgt funcs
 
   void _handleTapOutside() {
     setState(() {
@@ -166,7 +174,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                         if (messages.isEmpty) {
                           return Center(
                             child: Text(
-                              'No messages yet',
+                              state.status == ChatStatus.success
+                                  ? 'no msgs yet, start chatting!'
+                                  : 'an error has occurred. sry',
                               style: TextStyle(
                                 color: Theme.of(context)
                                     .colorScheme
@@ -179,12 +189,41 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
                         /// msgs present
                         else {
-                          return RefreshIndicator(
+                          return CustomMaterialIndicator(
                             onRefresh: () async {
-                              await context.read<ChatCubit>().fetchMessages(
+                              await Future.delayed(Duration(seconds: 2));
+                              ChatCubit chatCubit = context.read<ChatCubit>();
+                              chatCubit.fetchMessages(
                                   widget.chatRoom.contact.username);
+
+                              await chatCubit.stream.firstWhere(
+                                (state) =>
+                                    state.status == ChatStatus.success ||
+                                    state.status == ChatStatus.error,
+                              );
                             },
 
+                            /// pull up to refresh:
+                            trigger: IndicatorTrigger.leadingEdge,
+                            leadingScrollIndicatorVisible: true,
+                            trailingScrollIndicatorVisible: false,
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+
+                            /// the indicator
+                            indicatorBuilder: (context, controller) {
+                              return Padding(
+                                padding: const EdgeInsets.all(6.0),
+                                child: CircularProgressIndicator(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer,
+                                  value: controller.state.isLoading
+                                      ? null
+                                      : min(controller.value, 1.0),
+                                ),
+                              );
+                            },
                             child: CustomScrollView(
                               reverse: true,
                               // Show latest messages at the bottom
