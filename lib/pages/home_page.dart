@@ -32,7 +32,7 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       drawer: HomeDrawer(),
       appBar: AppBar(
-        title: Text('⌘  t u r i n g __ c h a t  ⍜'),
+        title: Text('⌘ turing_chat ⍜'),
         centerTitle: true,
       ),
       body: BlocListener<AuthCubit, AuthState>(

@@ -72,10 +72,7 @@ class TuringChatApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'turing_chat',
-      theme: ThemeData(
-        colorScheme: darkColorScheme,
-        useMaterial3: true,
-      ),
+      theme: terminalDarkTheme,
       routerConfig: AppRouter.router,
     );
   }
