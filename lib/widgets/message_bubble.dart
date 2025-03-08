@@ -34,7 +34,9 @@ class MessageBubble extends StatelessWidget {
         message.sentByUser ? colorScheme.onSecondary : colorScheme.onTertiary;
 
     /// border
-    final border = (message.correctlyIdentified != null && message.generated)
+    final border = (
+            // (message.correctlyIdentified != null || message.sentByUser) && // for testing purposes todo: add back in ofc
+            message.generated)
         ? Border.all(
             color: Theme.of(context).colorScheme.primary,
             width: 2,

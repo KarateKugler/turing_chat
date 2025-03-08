@@ -97,12 +97,8 @@ class DatabaseService {
     required String contactId,
   }) async {
     try {
-      final response = await _client
-          .from('messages')
-          .select()
-          .or('and(sender_id.eq.$userId,receiver_id.eq.$contactId),'
-              'and(sender_id.eq.$contactId,receiver_id.eq.$userId)')
-          .order('created_at', ascending: true);
+      List<Map<String, dynamic>> response = await _client.rpc('get_messages',
+          params: {'user_id': userId, 'contact_id': contactId});
 
       return response.map((e) => MessageModel.fromJson(e)).toList();
     }
@@ -141,5 +137,5 @@ class DatabaseService {
   }
 
   /// generate message
-  // todo
+// todo
 }
