@@ -123,12 +123,11 @@ class DatabaseService {
   }) async {
     /// Try sending
     try {
-      await _client.from('messages').insert({
+      await _client.rpc('insert_message', params: {
         'sender_id': userId,
         'receiver_id': contactId,
         'content': content,
         'generated': false,
-        'identified': null,
       });
     } catch (e) {
       // todo handle specific error types
