@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_api/supabase_api.dart';
 import 'package:turing_chat/models/contact.dart';
+import 'package:turing_chat/models/settings.dart';
 
 import '../models/chat_room.dart';
 import '../models/message.dart';
@@ -19,6 +20,10 @@ class ChatCubit extends Cubit<ChatState> {
           status: ChatStatus.initial,
           currentUser: null,
           chatroomsByUsername: {},
+          userSettings: Settings(
+            systemPrompt: '',
+            promptUpdatedAt: DateTime.fromMicrosecondsSinceEpoch(0),
+          ),
         ));
 
   /// Initialize the ChatCubit
@@ -28,19 +33,26 @@ class ChatCubit extends Cubit<ChatState> {
 
     try {
       final userData = _auth.userData!;
+      final String userId = userData['id']!;
 
       /// Get username from database and create User model
-      final username = await _db.getUsername(id: userData['id']!);
+      final username = await _db.getUsername(id: userId);
       final user = User(
-        id: userData['id']!,
+        id: userId,
         email: userData['email']!,
         username: username,
         createdAt: DateTime.parse(userData['created_at']!),
       );
 
+      final promptData = await _db.fetchSystemPrompt(userId);
+
       /// add to state
       emit(state.copyWith(
-          currentUser: user));
+          currentUser: user,
+          userSettings: Settings(
+            systemPrompt: promptData['system_prompt'],
+            promptUpdatedAt: DateTime.parse(promptData['prompt_created_at']),
+          )));
 
       /// fetch contacts initially
       fetchContacts();
@@ -59,7 +71,8 @@ class ChatCubit extends Cubit<ChatState> {
     emit(state.copyWith(status: ChatStatus.loading));
     try {
       /// we get the list of contacts
-      List<ContactModel> contactData = await _db.fetchContacts(state.currentUser!.id);
+      List<ContactModel> contactData =
+          await _db.fetchContacts(state.currentUser!.id);
       debugPrint(contactData.toString());
 
       /// ..
@@ -183,17 +196,18 @@ class ChatCubit extends Cubit<ChatState> {
 
     try {
       List<MessageModel> messageData = await _db.fetchMessages(
-              userId: state.currentUser!.id,
-              contactId: state.chatroomsByUsername[contactName]!.contact.id);
+          userId: state.currentUser!.id,
+          contactId: state.chatroomsByUsername[contactName]!.contact.id);
 
       state.chatroomsByUsername[contactName]!.messages.clear();
       state.chatroomsByUsername[contactName]!.messages.addAll(
-              messageData.map((e) => Message.fromModel(e, state.currentUser!.id)));
+          messageData.map((e) => Message.fromModel(e, state.currentUser!.id)));
 
       emit(state.copyWith(status: ChatStatus.success));
     } catch (e) {
       debugPrint(e.toString());
-      emit(state.copyWith(status: ChatStatus.error, errorMessage: e.toString()));
+      emit(
+          state.copyWith(status: ChatStatus.error, errorMessage: e.toString()));
     }
   }
 }

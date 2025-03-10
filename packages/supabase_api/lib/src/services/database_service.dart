@@ -8,7 +8,11 @@ class DatabaseService {
 
   DatabaseService(this._client);
 
+  /// /////////////////////////////////
+  ///   PROFILE AND CONTACTS
+
   /// Get Username by UID
+
   Future<String> getUsername({required String id}) async {
     var response = await _client
         .from('profiles')
@@ -19,6 +23,7 @@ class DatabaseService {
   }
 
   /// Add friend if username exists (and return friendId)
+
   Future<String> addFriendByUsername(
       String userId, String friendUsername) async {
     /// try to get user profile
@@ -42,6 +47,7 @@ class DatabaseService {
   }
 
   /// Add a friend by UserID (for accepting pending friend requests)
+
   Future<void> addFriendByUUID(String userId, String friendId) async {
     await _client
         .from('contacts')
@@ -49,6 +55,7 @@ class DatabaseService {
   }
 
   /// Fetch all contacts
+
   Future<List<ContactModel>> fetchContacts(String userId) async {
     /// Mutuals (Friend out and Friend in)
     List? response =
@@ -90,8 +97,12 @@ class DatabaseService {
     return contacts;
   }
 
+  /// /////////////////////////////////
+  ///   MESSAGES
+
   /// fetch all messages for a chat room.
   // maybe invert, and get latest msgs first, then invert rendering in chatroom page
+
   Future<List<MessageModel>> fetchMessages({
     required String userId,
     required String contactId,
@@ -110,12 +121,13 @@ class DatabaseService {
     }
   }
 
-  /// listen to messages in chat with email
+  /// listen to messages in chat todo
 
   /// send message
   ///
-  /// todo: enable sending null, to show '...' writing in progress (idea)
+  /// todo: (idea) enable sending null, to show '...' writing in progress
   /// -> (returns Future<String> of message id and then override when actually sending)
+
   Future<void> sendMessage({
     required String userId,
     required String contactId,
@@ -135,6 +147,55 @@ class DatabaseService {
     }
   }
 
-  /// generate message
-// todo
+  /// generate message todo
+
+  /// /////////////////////////////////
+  ///   GENERATION SETTINGS
+
+  /// fetch system prompt
+  Future<Map<String, dynamic>> fetchSystemPrompt(String userId) async {
+    /// ...
+    try {
+      var result = await _client
+          .from('settings')
+          .select('system_prompt, prompt_created_at')
+          .eq('user_id', userId)
+          .single();
+
+      return result;
+    }
+
+    /// ...
+    catch (e) {
+      rethrow;
+    }
+  }
+
+  /// update system prompt
+  Future<void> updateSystemPrompt(String userId, String prompt) async {
+    ///
+    try {
+      await _client
+          .rpc('update_prompt', params: {'user_id': userId, 'prompt': prompt});
+    }
+
+    ///
+    catch (e) {
+      rethrow;
+    }
+  }
+
+  /// reset system prompt
+  Future<void> resetSystemPrompt(String userId) async {
+    ///
+    try {
+      await _client
+          .rpc('update_prompt', params: {'user_id': userId, 'prompt': null});
+    }
+
+    ///
+    catch (e) {
+      rethrow;
+    }
+  }
 }
