@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_api/supabase_api.dart';
 import 'package:turing_chat/helpers/auth_utils.dart';
-import '../logic/chat_cubit.dart';
-import 'loading_widget.dart';
 
+import '../logic/chat_cubit.dart';
+import '../theme/style.dart';
+import 'loading_widget.dart';
 import 'text_field_dialog.dart';
 
 class AddFriendButton extends StatefulWidget {
@@ -52,9 +53,7 @@ class _AddFriendButtonState extends State<AddFriendButton> {
                 /// if the user doesn't exist,
                 on NotFoundException catch (e) {
                   chatCubit.chatError(e.message);
-                }
-
-                catch (e) {
+                } catch (e) {
                   chatCubit.chatError(e.toString());
                 }
 
@@ -70,7 +69,12 @@ class _AddFriendButtonState extends State<AddFriendButton> {
       },
 
       /// Show a circular progress indicator after pressed
-      child: isLoading ? LoadingWidget() : Icon(Icons.add_circle_outline),
+      child: isLoading
+          ? LoadingWidget()
+          : Icon(
+              Icons.add_circle_outline,
+              size: Style.fabIconSize,
+            ),
     );
   }
 }

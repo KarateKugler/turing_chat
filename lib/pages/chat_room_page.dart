@@ -11,6 +11,7 @@ import 'package:turing_chat/widgets/loading_widget.dart';
 import '../logic/chat_cubit.dart';
 import '../models/chat_room.dart';
 import '../models/message.dart';
+import '../theme/style.dart';
 import '../widgets/blur_widget.dart';
 import '../widgets/message_bubble.dart';
 
@@ -354,7 +355,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                       _messageController.text.isEmpty
                                           ? Icons.psychology
                                           : Icons.send,
-                                      size: 25),
+                                      size: Style.fabIconSize),
                                   shape: CircleBorder(),
                                   backgroundColor:
                                       Theme.of(context).colorScheme.primary,

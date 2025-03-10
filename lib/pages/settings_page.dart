@@ -39,6 +39,15 @@ class _SettingsPageState extends State<SettingsPage> {
         title: Text('S E T T I N G S'),
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       ),
+      floatingActionButton: changesMade ? FloatingActionButton(
+        onPressed: resetSettings,
+        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+        child: Icon(
+          Icons.restore,
+          size: Style.fabIconSize,
+        ),
+        tooltip: 'reset',
+      ) : null,
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
