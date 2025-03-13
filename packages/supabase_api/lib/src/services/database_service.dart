@@ -172,7 +172,7 @@ class DatabaseService {
   }
 
   /// update system prompt
-  Future<void> updateSystemPrompt(String userId, String prompt) async {
+  Future<void> updateSystemPrompt({required String userId, required String prompt}) async {
     ///
     try {
       await _client

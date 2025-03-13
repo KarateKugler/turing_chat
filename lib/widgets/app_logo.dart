@@ -11,9 +11,15 @@ class AppLogo extends StatelessWidget {
       padding: EdgeInsets.all(8.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16.0),
-        color: Theme.of(context).colorScheme.tertiary,
-        border: Border.all(
-            color: Theme.of(context).colorScheme.primary),
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.tertiaryContainer,
+            Theme.of(context).colorScheme.secondaryContainer,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: Theme.of(context).colorScheme.primary),
       ),
       child: Icon(
         Icons.chat,
