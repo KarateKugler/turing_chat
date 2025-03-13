@@ -28,6 +28,7 @@ class ChatCubit extends Cubit<ChatState> {
 
   /// Initialize the ChatCubit
   /// (only called if Authenticated, so active session is ensured)
+
   void init() async {
     emit(state.copyWith(status: ChatStatus.loading));
 
@@ -44,18 +45,16 @@ class ChatCubit extends Cubit<ChatState> {
         createdAt: DateTime.parse(userData['created_at']!),
       );
 
-      final promptData = await _db.fetchSystemPrompt(userId);
-
       /// add to state
       emit(state.copyWith(
-          currentUser: user,
-          userSettings: Settings(
-            systemPrompt: promptData['system_prompt'],
-            promptUpdatedAt: DateTime.parse(promptData['prompt_created_at']),
-          )));
+        currentUser: user,
+      ));
 
-      /// fetch contacts initially
+      /// fetch contacts initially (emits success)
       fetchContacts();
+
+      /// fetch settings (also emits success)
+      fetchSystemPrompt();
     }
 
     /// ...
@@ -66,7 +65,11 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
+  /// /////////////////////////////////
+  ///   CONTACTS
+
   /// fetch/refrsh all cntcts.
+
   Future<void> fetchContacts() async {
     emit(state.copyWith(status: ChatStatus.loading));
     try {
@@ -97,6 +100,7 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   /// Add a new friend by username
+
   Future<void> addFriendByUsername(String friendUsername) async {
     /// Try finding by username and adding
     try {
@@ -161,11 +165,16 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   /// emit a chat error state directly
+
   void chatError(String errorMessage) {
     emit(state.copyWith(status: ChatStatus.error, errorMessage: errorMessage));
   }
 
+  /// /////////////////////////////////
+  ///   MESSAGES
+
   /// send a message to a contact
+
   Future<void> sendMessage({
     required String contactId,
     required String content,
@@ -188,9 +197,11 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  /// request a generated message and send to a contact
+  /// call function to generate and send to contact
+  /// todo
 
   /// fetch/refresh msgs for one contact
+
   Future<void> fetchMessages(String contactName) async {
     emit(state.copyWith(status: ChatStatus.loading));
 
@@ -208,6 +219,76 @@ class ChatCubit extends Cubit<ChatState> {
       debugPrint(e.toString());
       emit(
           state.copyWith(status: ChatStatus.error, errorMessage: e.toString()));
+    }
+  }
+
+  /// /////////////////////////////////
+  ///   SETTINGS
+
+  /// fetches and updates the user's current system prompt
+
+  Future<void> fetchSystemPrompt() async {
+    emit(state.copyWith(status: ChatStatus.loading));
+    try {
+      final promptData = await _db.fetchSystemPrompt(state.currentUser!.id);
+
+      /// add to state and emit success
+      emit(state.copyWith(
+          status: ChatStatus.success,
+          userSettings: Settings(
+            systemPrompt: promptData['system_prompt'],
+            promptUpdatedAt: DateTime.parse(promptData['prompt_created_at']),
+          )));
+    }
+
+    /// ...
+    catch (e) {
+      emit(
+          state.copyWith(status: ChatStatus.error, errorMessage: e.toString()));
+      debugPrint(e.toString());
+    }
+  }
+
+  /// sends updated prompt to the db
+
+  Future<void> updateSystemPrompt(String newPrompt) async {
+    emit(state.copyWith(status: ChatStatus.loading));
+
+    try {
+      /// send
+      await _db.updateSystemPrompt(
+          userId: state.currentUser!.id, prompt: newPrompt);
+
+      /// fetch again (emits suc.)
+      fetchSystemPrompt();
+    }
+
+    /// ...
+    catch (e) {
+      emit(
+          state.copyWith(status: ChatStatus.error, errorMessage: e.toString()));
+      debugPrint(e.toString());
+    }
+  }
+
+  /// reset the system prompt to the default.
+
+  Future<void> resetSystemPrompt() async {
+    emit(state.copyWith(status: ChatStatus.loading));
+
+    try {
+      /// reset
+      await _db.resetSystemPrompt(state.currentUser!.id);
+
+      /// fetch again (emits suc.)
+      fetchSystemPrompt();
+    }
+
+    /// ...
+    catch (e) {
+      emit(
+          state.copyWith(status: ChatStatus.error, errorMessage: e.toString()));
+      debugPrint(e.toString());
     }
   }
 }

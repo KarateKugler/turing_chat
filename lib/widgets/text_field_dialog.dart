@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/style.dart';
+
 class TextFieldDialog extends StatefulWidget {
   final void Function(String submitText)? onSubmitted;
   final bool Function(String submitText)? validator;
@@ -31,7 +33,8 @@ class _TextFieldDialogState extends State<TextFieldDialog> {
     return AlertDialog(
       title: Text(widget.titleText),
       contentPadding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-      shape: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+      shape: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(Style.cornerRadius)),
       content: TextField(
         controller: _textController,
         decoration: InputDecoration(
@@ -40,7 +43,7 @@ class _TextFieldDialogState extends State<TextFieldDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        OutlinedButton(
           onPressed: () {
             /// validate input string
             _errorText = null;
@@ -54,13 +57,29 @@ class _TextFieldDialogState extends State<TextFieldDialog> {
             widget.onSubmitted!(_textController.text);
             Navigator.of(context).pop();
           },
-          child: Text(widget.submitText),
+          child: Text(
+            widget.submitText,
+            style: Theme.of(context)
+                .textTheme
+                .labelLarge!
+                .copyWith(color: Theme.of(context).colorScheme.onPrimaryContainer),
+          ),
+          style: OutlinedButton.styleFrom(
+              side: BorderSide(color:
+                  Theme.of(context).colorScheme.onPrimaryContainer)),
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('cancel'),
+          child: Text(
+            'cancel',
+            style: Theme.of(context)
+                .textTheme
+                .labelLarge!
+                .copyWith(color: Theme.of(context).colorScheme.onPrimaryContainer),
+          ),
         ),
       ],
+      actionsPadding: EdgeInsets.all(16.0),
     );
   }
 }
