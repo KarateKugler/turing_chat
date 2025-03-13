@@ -260,7 +260,7 @@ class ChatCubit extends Cubit<ChatState> {
           userId: state.currentUser!.id, prompt: newPrompt);
 
       /// fetch again (emits suc.)
-      fetchSystemPrompt();
+      await fetchSystemPrompt();
     }
 
     /// ...
@@ -281,7 +281,7 @@ class ChatCubit extends Cubit<ChatState> {
       await _db.resetSystemPrompt(state.currentUser!.id);
 
       /// fetch again (emits suc.)
-      fetchSystemPrompt();
+      await fetchSystemPrompt();
     }
 
     /// ...

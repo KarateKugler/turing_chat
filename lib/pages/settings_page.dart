@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:turing_chat/logic/auth_cubit.dart';
 import 'package:turing_chat/widgets/loading_widget.dart';
+import 'package:turing_chat/widgets/text_field_dialog.dart';
 
 import '../logic/chat_cubit.dart';
 import '../theme/style.dart';
@@ -25,9 +26,12 @@ class _SettingsPageState extends State<SettingsPage> {
   TextEditingController _promptFieldTextController = TextEditingController();
   FocusNode _promptFocusNode = FocusNode();
   bool changesMade = false;
+  bool promptChangesLoading = false;
+  bool resetLoading = false;
+  bool deleteLoading = false;
   String tokenCounter = '0';
 
-  void onChanged(String value) {
+  void onPromptChanged(String value) {
     setState(() {
       changesMade = true;
     });
@@ -35,10 +39,11 @@ class _SettingsPageState extends State<SettingsPage> {
     calcTokens();
   }
 
-  void resetSettings() {
-    // todo: confirm dialog -> prefill again
+  void onReset() {
     setState(() {
       changesMade = false;
+      _promptFieldTextController.text =
+          context.read<ChatCubit>().state.userSettings.systemPrompt;
     });
 
     calcTokens();
@@ -76,7 +81,27 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       floatingActionButton: changesMade
           ? FloatingActionButton(
-              onPressed: resetSettings,
+              onPressed: () {
+                _showConfirmDialog(
+                  context: context,
+                  title: 'undo changes',
+                  content: Text(
+                      'this action will undo your current changes and restore your current settings.'),
+                  onConfirmed: () {
+                    setState(() {
+                      _promptFieldTextController.text = context
+                          .read<ChatCubit>()
+                          .state
+                          .userSettings
+                          .systemPrompt;
+                    });
+
+                    onReset();
+
+                    Navigator.of(context).pop();
+                  },
+                );
+              },
               backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
               child: Icon(
                 Icons.restore,
@@ -169,7 +194,22 @@ class _SettingsPageState extends State<SettingsPage> {
 
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: BlocBuilder<ChatCubit, ChatState>(
+                  // should really make a new cubit here for the settings
+                  child: BlocConsumer<ChatCubit, ChatState>(
+                    listenWhen: (previous, current) {
+                      if (previous != current) {
+                        if (previous.status == ChatStatus.loading &&
+                            current.status != ChatStatus.loading) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(current.status == ChatStatus.success
+                                  ? 'action successful.'
+                                  : 'error occurred: ${current.errorMessage}')));
+                        }
+                        return true;
+                      }
+                      return false;
+                    },
+                    listener: (context, state) {},
                     builder: (context, state) {
                       return Container(
                         decoration: BoxDecoration(
@@ -249,7 +289,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 onTapOutside: (_) {
                                   _promptFocusNode.unfocus();
                                 },
-                                onChanged: onChanged,
+                                onChanged: onPromptChanged,
                               ),
                             ),
 
@@ -260,6 +300,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               alignment: Alignment.centerRight,
                               child: Text(
                                 'updated: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(state.userSettings.promptUpdatedAt.toLocal())}',
+                                // todo: just set local var together with sys prompt
                                 style: Theme.of(context)
                                     .textTheme
                                     .labelMedium!
@@ -274,27 +315,54 @@ class _SettingsPageState extends State<SettingsPage> {
                             FilledButton(
                               // tonal looks better
                               onPressed: changesMade
-                                  ? () {}
+                                  ? () => _showConfirmDialog(
+                                        context: context,
+                                        title: 'confirm changes',
+                                        content: Text(
+                                            'your current prompt will be overwritten and cannot be restored.'),
+                                        onConfirmed: () async {
+                                          ChatCubit chatCubit =
+                                              context.read<ChatCubit>();
+                                          Navigator.pop(context);
+
+                                          setState(() {
+                                            promptChangesLoading = true;
+                                          });
+
+                                          await chatCubit.updateSystemPrompt(
+                                              _promptFieldTextController.text);
+
+                                          setState(() {
+                                            promptChangesLoading = false;
+                                            changesMade = false;
+                                          });
+                                        },
+                                      )
                                   : null,
-                              child: Text(
-                                changesMade
-                                    ? 'apply changes'
-                                    : 'type to update',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge!
-                                    .copyWith(
-                                      fontSize: 20,
-                                      color: changesMade
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .onPrimary
-                                          : Theme.of(context)
-                                              .colorScheme
-                                              .onPrimary
-                                              .withAlpha(120),
+                              child: promptChangesLoading
+                                  ? LoadingWidget(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary)
+                                  : Text(
+                                      changesMade
+                                          ? 'apply changes'
+                                          : 'type to update',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelLarge!
+                                          .copyWith(
+                                            fontSize: 20,
+                                            color: changesMade
+                                                ? Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimary
+                                                : Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimary
+                                                    .withAlpha(120),
+                                          ),
                                     ),
-                              ),
                               style: OutlinedButton.styleFrom(
                                 padding: EdgeInsets.symmetric(vertical: 8),
                               ),
@@ -307,19 +375,56 @@ class _SettingsPageState extends State<SettingsPage> {
                             OutlinedButton(
                               // tonal looks better
                               onPressed: () {
-                                // todo
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => TextFieldDialog(
+                                    validator: (submitText) =>
+                                        submitText == 'reset',
+                                    titleText: 'reset prompt',
+                                    hintText: 'reset',
+                                    submitText: 'confirm',
+                                    critical: true,
+                                    errorHint: 'enter the correct text',
+                                    content: Text(
+                                        'please type \'reset\' to confirm. your current prompt and all changes will be lost.'),
+                                    onSubmitted: (submitText) async {
+                                      ChatCubit chatCubit =
+                                          context.read<ChatCubit>();
+
+                                      setState(() {
+                                        resetLoading = true;
+                                      });
+
+                                      await chatCubit.resetSystemPrompt();
+
+                                      setState(() {
+                                        _promptFieldTextController.text =
+                                            chatCubit.state.userSettings
+                                                .systemPrompt;
+                                        resetLoading = false;
+                                        changesMade = false;
+                                      });
+                                    },
+                                  ),
+                                );
                               },
-                              child: Text(
-                                'reset to default',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge!
-                                    .copyWith(
-                                      fontSize: 20,
+                              child: resetLoading
+                                  ? LoadingWidget(
                                       color:
                                           Theme.of(context).colorScheme.error,
+                                    )
+                                  : Text(
+                                      'reset to default',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelLarge!
+                                          .copyWith(
+                                            fontSize: 20,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .error,
+                                          ),
                                     ),
-                              ),
                               style: OutlinedButton.styleFrom(
                                 side: BorderSide(
                                   color: Theme.of(context).colorScheme.error,
@@ -385,6 +490,66 @@ class _SettingsPageState extends State<SettingsPage> {
 
                 /// Delete Account
 
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 8.0, horizontal: 8.0),
+                  child: OutlinedButton(
+                    // tonal looks better
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => TextFieldDialog(
+                          validator: (submitText) => submitText == 'delete...',
+                          titleText: 'DELETE ACCOUNT',
+                          hintText: 'delete...',
+                          submitText: '=DELE==TE ⇶⇶',
+                          critical: true,
+                          errorHint: 'enter the exact text',
+                          content: Text(
+                              'Sad to see you go.. alas, until we meet again.\n\nType \'delete...\' to confirm. Your entire account and all messages will be lost.'),
+                          onSubmitted: (submitText) async {
+                            setState(() {
+                              deleteLoading = true;
+                            });
+
+                            // todo
+
+                            setState(() {
+                              deleteLoading = false;
+                            });
+                          },
+                        ),
+                      );
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        deleteLoading
+                            ? LoadingWidget(
+                                color: Theme.of(context).colorScheme.error,
+                              )
+                            : Text(
+                                'delete account',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelLarge!
+                                    .copyWith(
+                                      fontSize: 20,
+                                      color:
+                                          Theme.of(context).colorScheme.error,
+                                    ),
+                              )
+                      ],
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                    ),
+                  ),
+                ),
+
                 /// A P P   S E T T I N G S
 
                 // buffer
@@ -401,27 +566,21 @@ class _SettingsPageState extends State<SettingsPage> {
 
   /// confirm changes to system prompt
   /// (shows snackbar)
-  void _showSystemPromptDialog(BuildContext context) {
+  void _showConfirmDialog({
+    required BuildContext context,
+    required String title,
+    required Widget? content,
+    required void Function()? onConfirmed,
+  }) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('confirm changes'),
-          content: Text(
-              'your current prompt will be overwritten and cannot be restored.'),
+          title: Text(title),
+          content: content,
           actions: [
             FilledButton(
-              onPressed: () async {
-                ChatCubit chatCubit = context.read<ChatCubit>();
-                Navigator.pop(context);
-                await chatCubit
-                    .updateSystemPrompt(_promptFieldTextController.text);
-
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(chatCubit.state.status == ChatStatus.success
-                        ? 'system prompt was successfully updated.'
-                        : 'error occurred while updating system prompt: ${chatCubit.state.errorMessage}')));
-              },
+              onPressed: onConfirmed,
               child: Text('confirm'),
             ),
             TextButton(

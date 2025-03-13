@@ -176,7 +176,7 @@ class DatabaseService {
     ///
     try {
       await _client
-          .rpc('update_prompt', params: {'user_id': userId, 'prompt': prompt});
+          .rpc('update_prompt', params: {'id': userId, 'prompt': prompt});
     }
 
     ///
@@ -190,7 +190,7 @@ class DatabaseService {
     ///
     try {
       await _client
-          .rpc('update_prompt', params: {'user_id': userId, 'prompt': null});
+          .rpc('update_prompt', params: {'id': userId, 'prompt': null});
     }
 
     ///

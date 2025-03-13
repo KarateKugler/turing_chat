@@ -36,6 +36,7 @@ class _AddFriendButtonState extends State<AddFriendButton> {
               titleText: 'add a friend',
               hintText: 'username_001',
               submitText: 'add',
+              critical: false,
 
               /// After submitted
               onSubmitted: (submitText) async {
