@@ -92,12 +92,29 @@ class MessageBubble extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  timeago.format(message.createdAt),
-                  style: TextStyle(
-                    color: textColor.withOpacity(0.7),
-                    fontSize: 12,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      timeago.format(message.createdAt),
+                      style: TextStyle(
+                        color: textColor.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                    SizedBox(width: 2),
+                    Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: Icon(
+                        message.sent ? Icons.check_circle_outlined : Icons.radio_button_unchecked,
+                        size: 12,
+                        color:
+                            Theme.of(context).colorScheme.onSecondaryContainer,
+                      ),
+                    )
+                  ],
                 ),
               ],
             ),

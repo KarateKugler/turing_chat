@@ -147,7 +147,22 @@ class DatabaseService {
     }
   }
 
-  /// generate message todo
+  /// generate message
+  Future<void> sendGeneratedMessage({
+    required String userId,
+    required String contactId,
+}) async {
+    /// Try sending
+    try {
+      await _client.rpc('send_generated_chat_message', params: {
+        'user_id': userId,
+        'contact_id': contactId,
+      });
+    } catch (e) {
+      // todo handle specific error types
+      rethrow;
+    }
+  }
 
   /// /////////////////////////////////
   ///   GENERATION SETTINGS

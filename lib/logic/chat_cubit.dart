@@ -198,7 +198,23 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   /// call function to generate and send to contact
-  /// todo
+  Future<void> sendGeneratedMessage(String contactId) async {
+    User user = state.currentUser!;
+
+    ///
+    try {
+      _db.sendGeneratedMessage(
+        userId: user.id,
+        contactId: contactId,
+      );
+    }
+
+    ///
+    catch (e) {
+      debugPrint(e.toString());
+      emit(state.copyWith(errorMessage: e.toString()));
+    }
+  }
 
   /// fetch/refresh msgs for one contact
 

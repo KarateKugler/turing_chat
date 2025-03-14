@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:turing_chat/models/contact.dart';
 import 'package:turing_chat/widgets/chat_input_field.dart';
 import 'package:turing_chat/widgets/loading_widget.dart';
@@ -46,14 +45,21 @@ class ChatRoomPage extends StatefulWidget {
 }
 
 class _ChatRoomPageState extends State<ChatRoomPage> {
-  late final TextEditingController _messageController;
+  /// Text Input
+  late final TextEditingController _inputController;
+  final FocusNode _inputFocusNode = FocusNode();
+
+  /// generation
+  bool _generateLoading = false;
+
+  /// Selecting a message
   Message? _selectedMessage;
   Widget? _selectedMessageBubble;
 
   @override
   void initState() {
     super.initState();
-    _messageController = TextEditingController();
+    _inputController = TextEditingController();
   }
 
   @override
@@ -65,7 +71,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   @override
   void dispose() {
-    _messageController.dispose();
+    _inputController.dispose();
     super.dispose();
   }
 
@@ -162,8 +168,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                 child: ClipRRect(
                   child: BlocBuilder<ChatCubit, ChatState>(
                     builder: (context, state) {
-                      /// Loading
-                      if (state.status == ChatStatus.loading) {
+                      /// initial loading
+                      if (state.status == ChatStatus.loading &&
+                          messages.isEmpty) {
                         return Center(
                           child: LoadingWidget(),
                         ); // shimmer effect messages
@@ -190,20 +197,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
                         /// msgs present
                         else {
+                          /// Refresh indicator
                           return CustomMaterialIndicator(
-                            onRefresh: () async {
-                              await Future.delayed(Duration(seconds: 2));
-                              ChatCubit chatCubit = context.read<ChatCubit>();
-                              chatCubit.fetchMessages(
-                                  widget.chatRoom.contact.username);
-
-                              await chatCubit.stream.firstWhere(
-                                (state) =>
-                                    state.status == ChatStatus.success ||
-                                    state.status == ChatStatus.error,
-                              );
-                            },
-
                             /// pull up to refresh:
                             trigger: IndicatorTrigger.leadingEdge,
                             leadingScrollIndicatorVisible: true,
@@ -225,6 +220,19 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                 ),
                               );
                             },
+
+                            /// refreshes
+                            onRefresh: () async {
+                              ChatCubit chatCubit = context.read<ChatCubit>();
+                              chatCubit.fetchMessages(
+                                  widget.chatRoom.contact.username);
+
+                              await chatCubit.stream.firstWhere(
+                                (state) =>
+                                    state.status == ChatStatus.success ||
+                                    state.status == ChatStatus.error,
+                              );
+                            },
                             child: CustomScrollView(
                               reverse: true,
                               // Show latest messages at the bottom
@@ -244,11 +252,14 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                         final messageBubble = MessageBubble(
                                           key: key,
                                           message: message,
-                                          onLongPress: () =>
-                                              _handleMessageLongPress(
-                                            message,
-                                            MessageBubble(message: message),
-                                          ),
+                                          onLongPress: () {
+                                            _inputFocusNode.unfocus();
+
+                                            _handleMessageLongPress(
+                                              message,
+                                              MessageBubble(message: message),
+                                            );
+                                          },
                                         );
 
                                         return messageBubble;
@@ -295,9 +306,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                   chatCubit.init();
 
                                   // todo: use state mgmt and refresh page with bloc builder
-                                  if (context.mounted) {
-                                    context.pop();
-                                  }
+                                  // if (context.mounted) {
+                                  //   context.pop();
+                                  // }
                                 },
                                 icon: Icon(
                                   Icons.check_circle_outline,
@@ -319,43 +330,82 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                               children: [
                                 Expanded(
                                   child: ChatInputField(
-                                      controller: _messageController,
+                                      focusNode: _inputFocusNode,
+                                      controller: _inputController,
                                       onChanged: (_) {
                                         setState(() {});
-                                        debugPrint(_messageController.text);
+                                        debugPrint(_inputController.text);
                                       }),
                                 ),
                                 SizedBox(width: 8),
                                 FloatingActionButton(
-                                  onPressed: () {
+                                  onPressed: () async {
                                     final message =
-                                        _messageController.text.trim();
+                                        _inputController.text.trim();
+
+                                    ChatCubit chatCubit =
+                                        context.read<ChatCubit>();
 
                                     /// Send the message if just typed
                                     if (message.isNotEmpty) {
-                                      context.read<ChatCubit>().sendMessage(
-                                            contactId:
-                                                widget.chatRoom.contact.id,
-                                            content: message,
-                                          );
-                                      _messageController.clear();
+                                      // (and add to the state)
+                                      setState(() {
+                                        messages.add(Message(
+                                          id: chatCubit.state.currentUser!.id,
+                                          profileId: widget.chatRoom.contact.id,
+                                          content: message,
+                                          createdAt: DateTime.now(),
+                                          sentByUser: true,
+                                          generated: false,
+                                          correctlyIdentified: null,
+                                          sent: false,
+                                        ));
+                                      });
+
+                                      await chatCubit.sendMessage(
+                                        contactId: widget.chatRoom.contact.id,
+                                        content: message,
+                                      );
+
+                                      _inputController.clear();
                                     }
 
                                     /// Send generation request
                                     else {
                                       debugPrint('Generate!');
-                                      // todo
+                                      setState(() {
+                                        _generateLoading = true;
+                                      });
+
+                                      chatCubit.sendGeneratedMessage(
+                                          widget.chatRoom.contact.id);
                                     }
 
-                                    /// and refresh todo: not ugly
-                                    context.read<ChatCubit>().fetchMessages(
+                                    /// and refresh
+
+                                    await Future.delayed(
+                                        Duration(seconds: 1));
+
+                                    chatCubit.fetchMessages(
                                         widget.chatRoom.contact.username);
+
+                                    setState(() {
+                                      _generateLoading = false;
+                                    });
+
+                                    /// todo just set up realtime listener
                                   },
-                                  child: Icon(
-                                      _messageController.text.isEmpty
-                                          ? Icons.psychology
-                                          : Icons.send,
-                                      size: Style.fabIconSize),
+                                  child: _generateLoading
+                                      ? LoadingWidget(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary,
+                                        )
+                                      : Icon(
+                                          _inputController.text.isEmpty
+                                              ? Icons.psychology
+                                              : Icons.send,
+                                          size: Style.fabIconSize),
                                   shape: CircleBorder(),
                                   backgroundColor:
                                       Theme.of(context).colorScheme.primary,

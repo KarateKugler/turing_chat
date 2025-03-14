@@ -20,6 +20,8 @@ class Message {
   /// (is null if not guessed at all yet)
   final bool? correctlyIdentified;
 
+  final bool sent;
+
   Message({
     required this.id,
     required this.profileId,
@@ -28,6 +30,7 @@ class Message {
     required this.sentByUser,
     required this.generated,
     required this.correctlyIdentified,
+    this.sent = true,
   });
 
   static Message fromModel(MessageModel model, String userId) {
