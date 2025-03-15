@@ -22,7 +22,7 @@ final glowColor = Color(0xA35F00FF);
 /// When a message bubble is long-pressed, this widget blurs the entire screen except
 /// for the selected message bubble, which is displayed prominently in the center.
 /// Tapping outside the message bubble dismisses the blur effect.
-class BlurWidget extends StatefulWidget {
+class GameOverlay extends StatefulWidget {
   /// The selected message bubble to display prominently when blurred.
   /// If null, no blur effect is applied and the child is displayed normally.
   final Widget? messageBubble;
@@ -36,7 +36,7 @@ class BlurWidget extends StatefulWidget {
   /// Duration for the blur animation.
   final Duration animationDuration;
 
-  BlurWidget({
+  GameOverlay({
     super.key,
     this.messageBubble,
     this.onAction,
@@ -45,10 +45,10 @@ class BlurWidget extends StatefulWidget {
   });
 
   @override
-  State<BlurWidget> createState() => _BlurWidgetState();
+  State<GameOverlay> createState() => _GameOverlayState();
 }
 
-class _BlurWidgetState extends State<BlurWidget>
+class _GameOverlayState extends State<GameOverlay>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _blurAnimation;
@@ -75,7 +75,7 @@ class _BlurWidgetState extends State<BlurWidget>
   }
 
   @override
-  void didUpdateWidget(covariant BlurWidget oldWidget) {
+  void didUpdateWidget(covariant GameOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (widget.messageBubble != oldWidget.messageBubble) {
@@ -181,7 +181,7 @@ class _BlurWidgetState extends State<BlurWidget>
                               ),
                             ],
                           ),
-                          child: ElevatedButton.icon(
+                          child: FilledButton.icon( // this needs to be bigger
                             onPressed: widget.onAction,
                             icon: const Icon(Icons.visibility),
                             label: const Text('Expose'),

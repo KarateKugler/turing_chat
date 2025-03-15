@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:turing_chat/theme/style.dart';
 
 import '../models/message.dart';
 
@@ -81,42 +82,47 @@ class MessageBubble extends StatelessWidget {
               ],
             ),
             padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: textAlignment,
-              children: [
-                Text(
-                  message.content,
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 16,
+            child: Material(
+              color: Colors.transparent,
+              child: Column(
+                crossAxisAlignment: textAlignment,
+                children: [
+                  Text(
+                    message.content,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: textColor,
+                        ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      timeago.format(message.createdAt),
-                      style: TextStyle(
-                        color: textColor.withOpacity(0.7),
-                        fontSize: 12,
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        timeago.format(message.createdAt),
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                              color: textColor.withAlpha(180),
+                          fontWeight: FontWeight.normal,
+                            ),
                       ),
-                    ),
-                    SizedBox(width: 2),
-                    Padding(
-                      padding: const EdgeInsets.all(2.0),
-                      child: Icon(
-                        message.sent ? Icons.check_circle_outlined : Icons.radio_button_unchecked,
-                        size: 12,
-                        color:
-                            Theme.of(context).colorScheme.onSecondaryContainer,
-                      ),
-                    )
-                  ],
-                ),
-              ],
+                      SizedBox(width: 2),
+                      Padding(
+                        padding: const EdgeInsets.all(3.0),
+                        child: Icon(
+                          message.sent
+                              ? Icons.check_circle_outlined
+                              : Icons.radio_button_unchecked,
+                          size: Style.chatSubTextSize,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSecondaryContainer,
+                        ),
+                      )
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

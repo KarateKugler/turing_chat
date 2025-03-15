@@ -27,6 +27,9 @@ class ChatInputField extends StatelessWidget {
       onTapUpOutside: focusNode != null ? (_) {
         focusNode!.unfocus();
       } : null,
+      style: Theme.of(context).textTheme.bodyMedium,
+      minLines: 1,
+      maxLines: 5,
     );
   }
 }

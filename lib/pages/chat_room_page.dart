@@ -11,7 +11,7 @@ import '../logic/chat_cubit.dart';
 import '../models/chat_room.dart';
 import '../models/message.dart';
 import '../theme/style.dart';
-import '../widgets/blur_widget.dart';
+import '../widgets/game_overlay.dart';
 import '../widgets/message_bubble.dart';
 
 /// The Chat Room page
@@ -419,7 +419,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         ),
 
         // The blur/ fcs overlay
-        BlurWidget(
+        GameOverlay(
           messageBubble: _selectedMessageBubble,
           onAction: _handleExposeAction,
         ),
