@@ -47,7 +47,7 @@ class ChatRoom {
   }
 
   /// only update the contact status
-  ChatRoom copyWithUpdatedContactStatus(ContactStatus contactStatus) {
+  ChatRoom copyWithUpdatedContactStatus(FriendStatus contactStatus) {
     return ChatRoom(
       contact: contact.copyWith(contactStatus: contactStatus),
       messages: messages,

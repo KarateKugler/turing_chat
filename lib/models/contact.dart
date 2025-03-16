@@ -1,7 +1,7 @@
 import 'package:supabase_api/supabase_api.dart';
 
 /// The possible states of the contact relationship
-enum ContactStatus {
+enum FriendStatus {
   requestedOut,
   requestedIn,
   friend,
@@ -9,33 +9,33 @@ enum ContactStatus {
   blockedOut,
   error;
 
-  static ContactStatus fromFlags({
+  static FriendStatus fromFlags({
     required bool blockedIn,
     required bool blockedOut,
     required bool friendIn,
     required bool friendOut,
   }) {
     if (blockedOut) {
-      return ContactStatus.blockedOut;
+      return FriendStatus.blockedOut;
     }
 
     if (blockedIn) {
-      return ContactStatus.blockedIn;
+      return FriendStatus.blockedIn;
     }
 
     if (friendIn && friendOut) {
-      return ContactStatus.friend;
+      return FriendStatus.friend;
     }
 
     if (friendIn) {
-      return ContactStatus.requestedIn;
+      return FriendStatus.requestedIn;
     }
 
     if (friendOut) {
-      return ContactStatus.requestedOut;
+      return FriendStatus.requestedOut;
     }
 
-    return ContactStatus.error;
+    return FriendStatus.error;
   }
 }
 
@@ -48,7 +48,7 @@ class Contact {
   final DateTime friendsSince;
 
   /// The status of the contact relationship
-  final ContactStatus contactStatus;
+  final FriendStatus contactStatus;
 
   Contact({
     required this.id,
@@ -63,7 +63,7 @@ class Contact {
     String? email,
     String? username,
     DateTime? friendsSince,
-    ContactStatus? contactStatus,
+    FriendStatus? contactStatus,
   }) {
     return Contact(
       id: id ?? this.id,
@@ -80,7 +80,7 @@ class Contact {
         email: null,
         username: data.username,
         friendsSince: data.createdAt,
-        contactStatus: ContactStatus.fromFlags(
+        contactStatus: FriendStatus.fromFlags(
             blockedIn: data.blockedIn,
             blockedOut: data.blockedOut,
             friendIn: data.friendRequestedIn,

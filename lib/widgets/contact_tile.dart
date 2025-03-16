@@ -7,7 +7,7 @@ const double leadingIconSize = 25;
 class ContactTile extends StatelessWidget {
   final String text;
   final int? unread;
-  final ContactStatus status;
+  final FriendStatus status;
   final void Function()? onTap;
 
   const ContactTile({
@@ -26,7 +26,7 @@ class ContactTile extends StatelessWidget {
     Color tileColor = Theme.of(context).colorScheme.tertiaryContainer;
 
     switch (status) {
-      case ContactStatus.error:
+      case FriendStatus.error:
         leading = Icon(
           Icons.error_outline,
           color: Theme.of(context).colorScheme.error,
@@ -36,7 +36,7 @@ class ContactTile extends StatelessWidget {
         onTapMessage = 'an unknown error occured, please let me know.';
         break;
 
-      case ContactStatus.requestedOut:
+      case FriendStatus.requestedOut:
         leading = const Icon(
           Icons.schedule_send,
           size: leadingIconSize,
@@ -46,7 +46,7 @@ class ContactTile extends StatelessWidget {
         tileColor = tileColor.withAlpha(150);
         break;
 
-      case ContactStatus.requestedIn:
+      case FriendStatus.requestedIn:
         leading = const Icon(
           Icons.mail,
           size: leadingIconSize,
@@ -60,7 +60,7 @@ class ContactTile extends StatelessWidget {
         suffix = '>> ... (accept)';
         break;
 
-      case ContactStatus.friend:
+      case FriendStatus.friend:
         leading = const Icon(
           Icons.chat,
           size: leadingIconSize,
@@ -68,7 +68,7 @@ class ContactTile extends StatelessWidget {
         suffix = null;
         break;
 
-      case ContactStatus.blockedIn:
+      case FriendStatus.blockedIn:
         leading = Icon(
           Icons.block,
           color: Theme.of(context).colorScheme.error,
@@ -79,7 +79,7 @@ class ContactTile extends StatelessWidget {
         tileColor = tileColor.withAlpha(150);
         break;
 
-      case ContactStatus.blockedOut:
+      case FriendStatus.blockedOut:
         leading = Icon(
           Icons.no_accounts,
           color: Theme.of(context).colorScheme.error,

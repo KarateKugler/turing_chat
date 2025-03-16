@@ -49,8 +49,8 @@ class ChatCubit extends Cubit<ChatState> {
         currentUser: user,
       ));
 
-      /// online status
-      await _db.initStatusPresence(username);
+      // /// online status
+      // await _db.initStatusPresence(username);
 
       /// contacts / chat rooms set up
       await fetchContacts();
@@ -134,7 +134,7 @@ class ChatCubit extends Cubit<ChatState> {
             email: null,
             username: friendUsername,
             friendsSince: DateTime.now(),
-            contactStatus: ContactStatus.requestedOut,
+            contactStatus: FriendStatus.requestedOut,
           ),
           messages: [],
           userScore: 0,
@@ -150,7 +150,7 @@ class ChatCubit extends Cubit<ChatState> {
         /// update contact status
         state.chatroomsByUsername[friendUsername] = state
             .chatroomsByUsername[friendUsername]!
-            .copyWithUpdatedContactStatus(ContactStatus.friend);
+            .copyWithUpdatedContactStatus(FriendStatus.friend);
       }
 
       emit(state.copyWith(status: ChatStatus.success));

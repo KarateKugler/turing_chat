@@ -288,7 +288,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
                       /// If the contact has requested to chat, show the accept button
                       widget.chatRoom.contact.contactStatus ==
-                              ContactStatus.requestedIn
+                              FriendStatus.requestedIn
                           ? SizedBox(
                               width: double.infinity,
                               child: FloatingActionButton.extended(
