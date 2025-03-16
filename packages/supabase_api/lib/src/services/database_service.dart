@@ -5,8 +5,42 @@ import '../models/models.dart';
 
 class DatabaseService {
   final SupabaseClient _client; // maybe replace with client.from etc.
+  final Map<String, RealtimeChannel> _channels;
 
-  DatabaseService(this._client);
+  DatabaseService(this._client)
+      : _channels = {
+          'online-status': _client.channel(
+            'online-status',
+            opts: const RealtimeChannelConfig(private: true),
+          )
+        };
+
+  /// /////////////////////////////////
+  /// realtime
+
+  /// online status
+  Future<void> initStatusPresence(String username) async {
+    // testing
+    _channels['online-status']!.onPresenceSync((payload) {
+      final newState = _channels['online-status']!.presenceState();
+      print('sync: $newState (payload: $payload)');
+    }).onPresenceJoin((payload) {
+      print('join: $payload');
+    }).onPresenceLeave((payload) {
+      print('leave: $payload');
+    }).subscribe((status, error) async {
+      if (status != RealtimeSubscribeStatus.subscribed) return;
+
+      final presenceTrackStatus = await _channels['online-status']!.track(
+          {
+            'user': username,
+            'online_at': DateTime.now().toIso8601String(),
+          }
+      );
+      print(presenceTrackStatus);
+    },);
+  }
+
 
   /// /////////////////////////////////
   ///   PROFILE AND CONTACTS
@@ -22,23 +56,23 @@ class DatabaseService {
     return response['username'];
   }
 
-  /// Add friend if username exists (and return friendId)
+  /// Add friend if username exists (returns friendId)
 
   Future<String> addFriendByUsername(
       String userId, String friendUsername) async {
-    /// try to get user profile
+    // try to get user profile
     var response = await _client
         .from('profiles')
         .select('username, auth_id')
         .eq('username', friendUsername)
         .maybeSingle();
 
-    /// Throw exception if username doesn't exist
+    // Throw exception if username doesn't exist
     if (response == null) {
       throw NotFoundException('Username doesn\'t exist');
     }
 
-    /// add contact to database
+    // add contact to database
     await _client
         .from('contacts')
         .insert({'sender_id': userId, 'receiver_id': response['auth_id']});
@@ -46,7 +80,7 @@ class DatabaseService {
     return response['auth_id'];
   }
 
-  /// Add a friend by UserID (for accepting pending friend requests)
+  /// Add a friend by UserID (/accept pending request)
 
   Future<void> addFriendByUUID(String userId, String friendId) async {
     await _client
@@ -57,7 +91,7 @@ class DatabaseService {
   /// Fetch all contacts
 
   Future<List<ContactModel>> fetchContacts(String userId) async {
-    /// Mutuals (Friend out and Friend in)
+    // Mutuals (Friend out and Friend in)
     List? response =
         await _client.rpc('get_mutuals', params: {'user_id': userId});
 
@@ -67,7 +101,7 @@ class DatabaseService {
             .toList() ??
         [];
 
-    /// Outgoing friend requests (but not accepted)
+    // Outgoing friend requests (but not accepted)
     response =
         await _client.rpc('get_contacts_out', params: {'user_id': userId});
 
@@ -77,7 +111,7 @@ class DatabaseService {
             .toList() ??
         [];
 
-    /// Ingoing friend requests (but not accepted)
+    // Ingoing friend requests (but not accepted)
     response =
         await _client.rpc('get_contacts_in', params: {'user_id': userId});
 
@@ -87,7 +121,7 @@ class DatabaseService {
             .toList() ??
         [];
 
-    /// combine
+    // combine
     List<ContactModel> contacts = [
       ...contactsMutual,
       ...contactsIn,
@@ -101,8 +135,8 @@ class DatabaseService {
   ///   MESSAGES
 
   /// fetch all messages for a chat room.
-  // maybe invert, and get latest msgs first, then invert rendering in chatroom page
-
+// maybe invert, and get latest msgs first, then invert rendering in chatroom page
+// (so that not all msgs have to be loaded for large chat rooms)
   Future<List<MessageModel>> fetchMessages({
     required String userId,
     required String contactId,
@@ -121,7 +155,16 @@ class DatabaseService {
     }
   }
 
-  /// listen to messages in chat todo
+  /// set up realtime channel w contact name
+  Future<void> addChannel({
+    required String username,
+    required String contactName,
+  }) async {
+    _channels[contactName] = _client.channel(
+      _getChannelName(username: username, contactName: contactName),
+      opts: const RealtimeChannelConfig(private: true),
+    );
+  }
 
   /// send message
   ///
@@ -151,7 +194,7 @@ class DatabaseService {
   Future<void> sendGeneratedMessage({
     required String userId,
     required String contactId,
-}) async {
+  }) async {
     /// Try sending
     try {
       await _client.rpc('send_generated_chat_message', params: {
@@ -187,7 +230,8 @@ class DatabaseService {
   }
 
   /// update system prompt
-  Future<void> updateSystemPrompt({required String userId, required String prompt}) async {
+  Future<void> updateSystemPrompt(
+      {required String userId, required String prompt}) async {
     ///
     try {
       await _client
@@ -212,5 +256,22 @@ class DatabaseService {
     catch (e) {
       rethrow;
     }
+  }
+
+  /// /////////////////////
+  /// helpers
+
+  /// get the ordered channel name from the user names
+
+  String _getChannelName({
+    required String username,
+    required String contactName,
+  }) {
+    List<String> names = [username, contactName];
+    names.sort((a, b) {
+      return a.toLowerCase().compareTo(b.toLowerCase());
+    });
+
+    return names.join('-');
   }
 }

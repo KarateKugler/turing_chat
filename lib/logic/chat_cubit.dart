@@ -36,7 +36,7 @@ class ChatCubit extends Cubit<ChatState> {
       final userData = _auth.userData!;
       final String userId = userData['id']!;
 
-      /// Get username from database and create User model
+      /// user model (username & created at)
       final username = await _db.getUsername(id: userId);
       final user = User(
         id: userId,
@@ -45,16 +45,18 @@ class ChatCubit extends Cubit<ChatState> {
         createdAt: DateTime.parse(userData['created_at']!),
       );
 
-      /// add to state
       emit(state.copyWith(
         currentUser: user,
       ));
 
-      /// fetch contacts initially (emits success)
-      fetchContacts();
+      /// online status
+      await _db.initStatusPresence(username);
 
-      /// fetch settings (also emits success)
-      fetchSystemPrompt();
+      /// contacts / chat rooms set up
+      await fetchContacts();
+
+      /// settings (sys prompt)
+      await fetchSystemPrompt();
     }
 
     /// ...
@@ -68,21 +70,24 @@ class ChatCubit extends Cubit<ChatState> {
   /// /////////////////////////////////
   ///   CONTACTS
 
-  /// fetch/refrsh all cntcts.
+  /// fetch/refrsh all contacts and init the chat rooms
+  ///
 
   Future<void> fetchContacts() async {
     emit(state.copyWith(status: ChatStatus.loading));
     try {
-      /// we get the list of contacts
+      /// contacts
       List<ContactModel> contactData =
           await _db.fetchContacts(state.currentUser!.id);
       debugPrint(contactData.toString());
 
-      /// ..
+      /// init chatrooms and realtime channels
       Map<String, ChatRoom> chatrooms = {};
       for (ContactModel entry in contactData) {
-        /// score, streak, contact data
+        // score, streak, contact data
         chatrooms[entry.username] = ChatRoom.fromContactModel(entry);
+        // realtime channel
+        _db.addChannel(username: state.currentUser!.username, contactName: entry.username);
       }
 
       emit(state.copyWith(
@@ -91,7 +96,7 @@ class ChatCubit extends Cubit<ChatState> {
       ));
     }
 
-    /// ...
+    // ...
     catch (e) {
       emit(
           state.copyWith(status: ChatStatus.error, errorMessage: e.toString()));
@@ -306,5 +311,13 @@ class ChatCubit extends Cubit<ChatState> {
           state.copyWith(status: ChatStatus.error, errorMessage: e.toString()));
       debugPrint(e.toString());
     }
+  }
+
+  @override
+  Future<void> close() {
+    return super.close();
+
+    // todo: close all supabase channels etc.
+
   }
 }
