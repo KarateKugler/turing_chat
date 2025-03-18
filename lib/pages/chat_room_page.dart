@@ -67,10 +67,14 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     super.didChangeDependencies();
     ChatCubit chatCubit = context.read<ChatCubit>();
     chatCubit.fetchMessages(widget.chatRoom.contact.username);
+    // listen to messages
+    chatCubit.addMessageSubscription(widget.chatRoom.contact.username);
   }
 
   @override
   void dispose() {
+    // remove message listener
+    context.read<ChatCubit>().removeMessageSubscription(widget.chatRoom.contact.username);
     _inputController.dispose();
     super.dispose();
   }

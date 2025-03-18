@@ -64,6 +64,18 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
+  @override
+  Future<void> close() {
+    _db.close();
+    return super.close();
+  }
+
+  /// emit a chat error state directly
+
+  void chatError(String errorMessage) {
+    emit(state.copyWith(status: ChatStatus.error, errorMessage: errorMessage));
+  }
+
   /// /////////////////////////////////
   ///   CONTACTS
 
@@ -78,21 +90,27 @@ class ChatCubit extends Cubit<ChatState> {
       /// init/update chatrooms and realtime channels
       Map<String, ChatRoom> chatrooms = state.chatroomsByUsername;
       for (ContactModel entry in contactData) {
+        print(entry);
         // init chatroom
-        if (state.chatroomsByUsername[entry.username] == null) {
+        if (chatrooms[entry.username] == null) {
           // contact data and status, score and streak
           chatrooms[entry.username] = ChatRoom.fromContactModel(entry);
 
-          // realtime channel if not blocked
+          // realtime channel and presence subscription (if not blocked)
           if (!(entry.blockedIn || entry.blockedOut)) {
-            _db.setUpStatusChannel(
+            print('not blocked');
+            // set init the channel
+            _db.initContactChannel(
               username: state.currentUser!.username,
               contactName: entry.username,
-              statusCallback: (payload) {
-                print('status broadcast: $payload');
-              },
+            );
+
+            // start listening to online status / presence
+            _db.addStatusSubscription(
+              username: state.currentUser!.username,
+              contactName: entry.username,
+              statusCallback: (_) {},
               presenceCallback: ({required online, required username}) {
-                // can return own status todo: internet connection?
                 if (username == state.currentUser!.username) return;
 
                 Map<String, ChatRoom> chatrooms = state.chatroomsByUsername;
@@ -105,7 +123,7 @@ class ChatCubit extends Cubit<ChatState> {
                           online ? OnlineStatus.online : OnlineStatus.offline);
 
                   // reemit:
-                  // todo maybe refactor with some update flag in the state.
+                  // todo refactor with update flag in the state.
                   emit(state.copyWith(chatroomsByUsername: chatrooms));
                 }
               },
@@ -208,14 +226,41 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  /// emit a chat error state directly
-
-  void chatError(String errorMessage) {
-    emit(state.copyWith(status: ChatStatus.error, errorMessage: errorMessage));
-  }
-
   /// /////////////////////////////////
   ///   MESSAGES
+
+  /// add message listener
+
+  void addMessageSubscription(String contactName) {
+    try {
+      _db.addMessageSubscription(
+        username: state.currentUser!.username,
+        contactName: contactName,
+        messageCallback: (message) {
+          state.chatroomsByUsername[contactName]!.messages
+              .add(Message.fromModel(message, state.currentUser!.id));
+
+          print('emit new msg!');
+          /// todo refresh flag
+          emit(state.copyWith(chatroomsByUsername: state.chatroomsByUsername));
+        },
+      );
+    } catch (e) {
+      debugPrint(e.toString());
+      emit(state.copyWith(errorMessage: e.toString()));
+    }
+  }
+
+  /// remove message listener
+
+  void removeMessageSubscription(String contactName) {
+    try {
+      _db.removeMessageSubscription(contactName);
+    } catch (e) {
+      debugPrint(e.toString());
+      emit(state.copyWith(errorMessage: e.toString()));
+    }
+  }
 
   /// send a message to a contact
 
@@ -227,15 +272,13 @@ class ChatCubit extends Cubit<ChatState> {
 
     ///
     try {
+      // send to the db and realtime channel
       _db.sendMessage(
         userId: user.id,
         contactId: contactId,
         content: content,
       );
-    }
-
-    ///
-    catch (e) {
+    } catch (e) {
       debugPrint(e.toString());
       emit(state.copyWith(errorMessage: e.toString()));
     }
@@ -350,11 +393,5 @@ class ChatCubit extends Cubit<ChatState> {
           state.copyWith(status: ChatStatus.error, errorMessage: e.toString()));
       debugPrint(e.toString());
     }
-  }
-
-  @override
-  Future<void> close() {
-    _db.close();
-    return super.close();
   }
 }

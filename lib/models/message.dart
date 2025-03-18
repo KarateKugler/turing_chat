@@ -40,7 +40,7 @@ class Message {
       content: model.content,
       createdAt: model.createdAt,
       sentByUser: model.senderId == userId,
-      generated: model.generated,
+      generated: model.generated ?? false,
       correctlyIdentified: model.identified,
     );
   }
