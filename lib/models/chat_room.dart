@@ -47,9 +47,9 @@ class ChatRoom {
   }
 
   /// only update the contact status
-  ChatRoom copyWithUpdatedContactStatus(FriendStatus contactStatus) {
+  ChatRoom copyWithUpdatedFriendStatus(FriendStatus friendStatus) {
     return ChatRoom(
-      contact: contact.copyWith(contactStatus: contactStatus),
+      contact: contact.copyWith(friendStatus: friendStatus),
       messages: messages,
       userScore: userScore,
       userStreak: userStreak,
@@ -57,6 +57,19 @@ class ChatRoom {
       contactStreak: contactStreak,
     );
   }
+
+  ChatRoom copyWithUpdatedOnlineStatus(OnlineStatus onlineStatus) {
+    return ChatRoom(
+      contact: contact.copyWith(onlineStatus: onlineStatus),
+      messages: messages,
+      userScore: userScore,
+      userStreak: userStreak,
+      contactScore: contactScore,
+      contactStreak: contactStreak,
+    );
+  }
+
+
 
   // todo scrap later
   static ChatRoom fromContactModel(ContactModel data) {

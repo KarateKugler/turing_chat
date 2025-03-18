@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 
 import '../models/contact.dart';
+import '../theme/style.dart';
+import 'shadow_widget.dart';
 
 const double leadingIconSize = 25;
 
 class ContactTile extends StatelessWidget {
   final String text;
   final int? unread;
-  final FriendStatus status;
+  final FriendStatus friendStatus;
+  final OnlineStatus onlineStatus;
   final void Function()? onTap;
 
   const ContactTile({
     required this.text,
     this.unread,
-    required this.status,
+    required this.friendStatus,
+    required this.onlineStatus,
     this.onTap,
     super.key,
   });
@@ -24,8 +28,11 @@ class ContactTile extends StatelessWidget {
     String? suffix;
     String? onTapMessage;
     Color tileColor = Theme.of(context).colorScheme.tertiaryContainer;
+    Color borderColor = onlineStatus.isOnline
+        ? Theme.of(context).colorScheme.primary
+        : Colors.transparent; // can add some pulsating effect?
 
-    switch (status) {
+    switch (friendStatus) {
       case FriendStatus.error:
         leading = Icon(
           Icons.error_outline,
@@ -57,7 +64,7 @@ class ContactTile extends StatelessWidget {
             )
           ],
         );
-        suffix = '>> ... (accept)';
+        suffix = '> (accept) <';
         break;
 
       case FriendStatus.friend:
@@ -91,22 +98,50 @@ class ContactTile extends StatelessWidget {
         break;
     }
 
-    return ListTile(
-      title: Text(
-        suffix != null ? '$text $suffix' : text,
-        style: Theme.of(context).textTheme.titleLarge!.copyWith(
-            fontStyle: suffix != null ? FontStyle.italic : FontStyle.normal),
+    return ShadowWidget(
+      shadow: [BoxShadow(color: borderColor, spreadRadius: 2, blurRadius: 5)],
+      color: tileColor,
+      borderRadius: BorderRadius.circular(Style.contactTileBorderRadius),
+      child: ListTile(
+        /// username and online status
+        title: RichText(
+            text: TextSpan(
+          text: suffix != null ? '$text $suffix' : text,
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                fontStyle: suffix != null ? FontStyle.italic : FontStyle.normal,
+              ),
+          children: [
+            TextSpan(
+              text: onlineStatus.isOnline ? ' (online)' : '',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium!
+                  .copyWith(fontStyle: FontStyle.italic),
+            ),
+          ],
+        )),
+        /// leading icon
+        leading: leading,
+        onTap: onTapMessage == null
+            ? onTap
+            : () {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(onTapMessage!)));
+              },
+        tileColor: tileColor,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(Style.contactTileBorderRadius)),
+        trailing: null,
+        subtitle: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5.0),
+          child: Text(
+            'lorem ipsum dolor sit amet amet amet bla bla here comes the drop',
+            style: Theme.of(context).textTheme.labelMedium!.copyWith(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ),
-      leading: leading,
-      onTap: onTapMessage == null
-          ? onTap
-          : () {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text(onTapMessage!)));
-            },
-      tileColor: tileColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-      trailing: null,
     );
   }
 

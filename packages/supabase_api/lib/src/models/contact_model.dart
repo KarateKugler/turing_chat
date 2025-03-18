@@ -46,4 +46,9 @@ class ContactModel {
       createdAt: DateTime.parse(json['created_at']),
     );
   }
+
+  @override
+  String toString() {
+    return 'ContactModel{friendRequestedIn: $friendRequestedIn, friendRequestedOut: $friendRequestedOut, blockedIn: $blockedIn, blockedOut: $blockedOut, contactId: $contactId, username: $username, userScore: $userScore, contactScore: $contactScore, userStreak: $userStreak, contactStreak: $contactStreak, createdAt: $createdAt}';
+  }
 }

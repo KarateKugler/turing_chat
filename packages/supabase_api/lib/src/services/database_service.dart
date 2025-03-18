@@ -5,42 +5,14 @@ import '../models/models.dart';
 
 class DatabaseService {
   final SupabaseClient _client; // maybe replace with client.from etc.
-  final Map<String, RealtimeChannel> _channels;
+  final Map<String, RealtimeChannel> _channels = {};
 
-  DatabaseService(this._client)
-      : _channels = {
-          'online-status': _client.channel(
-            'online-status',
-            opts: const RealtimeChannelConfig(private: true),
-          )
-        };
+  DatabaseService(this._client);
 
-  /// /////////////////////////////////
-  /// realtime
-
-  /// online status
-  Future<void> initStatusPresence(String username) async {
-    // testing
-    _channels['online-status']!.onPresenceSync((payload) {
-      final newState = _channels['online-status']!.presenceState();
-      print('sync: $newState (payload: $payload)');
-    }).onPresenceJoin((payload) {
-      print('join: $payload');
-    }).onPresenceLeave((payload) {
-      print('leave: $payload');
-    }).subscribe((status, error) async {
-      if (status != RealtimeSubscribeStatus.subscribed) return;
-
-      final presenceTrackStatus = await _channels['online-status']!.track(
-          {
-            'user': username,
-            'online_at': DateTime.now().toIso8601String(),
-          }
-      );
-      print(presenceTrackStatus);
-    },);
+  void close() {
+    _client.removeAllChannels();
+    // _client.dispose();
   }
-
 
   /// /////////////////////////////////
   ///   PROFILE AND CONTACTS
@@ -131,6 +103,120 @@ class DatabaseService {
     return contacts;
   }
 
+  /// ///////////////////////////////////
+  /// realtime
+
+  /// set up realtime channel w contact name
+
+  Future<void> setUpStatusChannel({
+    required String username,
+    required String contactName,
+
+    ///
+    required void Function(Map<String, dynamic> payload) statusCallback,
+
+    /// the callback that updates the status in the chat state
+    ///
+    /// for now:
+    /// takes the username of the contact, and whether online (join/sync) or
+    /// offline (leave)
+    required void Function({
+      required String username,
+      required bool online,
+    }) presenceCallback,
+  }) async {
+    String channelName =
+        _getChannelName(username: username, contactName: contactName);
+
+    print(channelName);
+
+    RealtimeChannel channel = _client.channel(
+      channelName,
+      opts: const RealtimeChannelConfig(private: false), // todo
+    );
+
+    _channels[contactName] = channel;
+
+    /// typing status (severely unfinished)
+    channel
+        .onBroadcast(
+            event: 'status',
+            callback: (payload) {
+              // todo (later)
+              print(payload);
+              if (payload['username'] == username) return;
+              statusCallback(payload);
+            })
+        .onPresenceSync((payload) {
+      /// sync
+
+      final List<SinglePresenceState> newState = channel.presenceState();
+      print('sync: $newState');
+      print('sync payload: ${newState.first}');
+
+      // for (SinglePresenceState presence in newState) {
+      //   String? name = presence.payload['username'];
+      //   if (name != null) {
+      //     presenceCallback(username: name, online: false); // ok
+      //   }
+      // }
+    }).onPresenceLeave((payload) {
+      /// leave
+
+      print('leave: $payload');
+
+      for (Presence presence in payload.leftPresences) {
+        String? name = presence.payload['username'];
+        if (name != null) {
+          presenceCallback(username: name, online: false); // ok
+        }
+      }
+    }).onPresenceJoin((payload) {
+      /// join
+
+      print('join ($channelName): $payload');
+
+      for (Presence presence in payload.newPresences) {
+        String? name = presence.payload['username'];
+        if (name != null) {
+          presenceCallback(username: name, online: true); // ok
+        }
+      }
+    }).subscribe(
+      (status, error) async {
+        /// and track own status
+
+        if (status == RealtimeSubscribeStatus.subscribed) {
+          final presenceTrackStatus =
+              await channel.track({'username': username});
+          print('presenceTrackStatus: $presenceTrackStatus');
+        }
+      },
+    );
+
+    print('subscribed!');
+
+    // // testing
+    // _channels['online-status']!.onPresenceSync((payload) {
+    //   final newState = _channels['online-status']!.presenceState();
+    //   print('sync: $newState (payload: $payload)');
+    // }).onPresenceJoin((payload) {
+    //   print('join: $payload');
+    // }).onPresenceLeave((payload) {
+    //   print('leave: $payload');
+    // }).subscribe((status, error) async {
+    //   if (status != RealtimeSubscribeStatus.subscribed) return;
+    //
+    //   final presenceTrackStatus = await _channels['online-status']!.track(
+    //       {
+    //         'user': username,
+    //         'online_at': DateTime.now().toIso8601String(),
+    //       }
+    //   );
+    //   print(presenceTrackStatus);
+    // },);
+  }
+
   /// /////////////////////////////////
   ///   MESSAGES
 
@@ -153,17 +239,6 @@ class DatabaseService {
       // todo handle specific error types
       rethrow;
     }
-  }
-
-  /// set up realtime channel w contact name
-  Future<void> addChannel({
-    required String username,
-    required String contactName,
-  }) async {
-    _channels[contactName] = _client.channel(
-      _getChannelName(username: username, contactName: contactName),
-      opts: const RealtimeChannelConfig(private: true),
-    );
   }
 
   /// send message
@@ -267,6 +342,7 @@ class DatabaseService {
     required String username,
     required String contactName,
   }) {
+    // just 'username1-username2' in lex. order
     List<String> names = [username, contactName];
     names.sort((a, b) {
       return a.toLowerCase().compareTo(b.toLowerCase());

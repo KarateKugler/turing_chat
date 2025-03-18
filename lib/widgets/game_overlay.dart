@@ -144,17 +144,24 @@ class _GameOverlayState extends State<GameOverlay>
                       children: [
                         Opacity(
                           opacity: _opacityAnimation.value,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  blurRadius: 30,
-                                  spreadRadius: -5 * _opacityAnimation.value,
-                                  color: glowColor,
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    boxShadow: [
+                                      BoxShadow(
+                                        blurRadius: 30,
+                                        spreadRadius:
+                                            -5 * _opacityAnimation.value,
+                                        color: glowColor,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ],
-                            ),
-                            child: widget.messageBubble,
+                              ),
+                              widget.messageBubble!
+                            ],
                           ),
                         ),
                       ],
@@ -181,7 +188,8 @@ class _GameOverlayState extends State<GameOverlay>
                               ),
                             ],
                           ),
-                          child: FilledButton.icon( // this needs to be bigger
+                          child: FilledButton.icon(
+                            // this needs to be bigger
                             onPressed: widget.onAction,
                             icon: const Icon(Icons.visibility),
                             label: const Text('Expose'),

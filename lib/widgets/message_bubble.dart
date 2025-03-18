@@ -63,27 +63,32 @@ class MessageBubble extends StatelessWidget {
         ),
         child: GestureDetector(
           onLongPress: onLongPress,
-          child: Container(
-            decoration: BoxDecoration(
-              color: bubbleColor,
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(16),
-                topRight: const Radius.circular(16),
-                bottomLeft: Radius.circular(message.sentByUser ? 16 : 0),
-                bottomRight: Radius.circular(message.sentByUser ? 0 : 16),
-              ),
-              border: border,
-              boxShadow: [
-                BoxShadow(
-                  color: shadowColor,
-                  blurRadius: 10,
-                  spreadRadius: 3,
-                ),
-              ],
+          child: Material(
+            color: bubbleColor,
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(16),
+              topRight: const Radius.circular(16),
+              bottomLeft: Radius.circular(message.sentByUser ? 16 : 0),
+              bottomRight: Radius.circular(message.sentByUser ? 0 : 16),
             ),
-            padding: const EdgeInsets.all(12),
-            child: Material(
-              color: Colors.transparent,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(16),
+                  topRight: const Radius.circular(16),
+                  bottomLeft: Radius.circular(message.sentByUser ? 16 : 0),
+                  bottomRight: Radius.circular(message.sentByUser ? 0 : 16),
+                ),
+                border: border,
+                boxShadow: [
+                  BoxShadow(
+                    color: shadowColor,
+                    blurRadius: 10,
+                    spreadRadius: 3,
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: textAlignment,
                 children: [

@@ -39,6 +39,14 @@ enum FriendStatus {
   }
 }
 
+enum OnlineStatus {
+  offline,
+  online,
+  typing;
+
+  bool get isOnline => this == OnlineStatus.online || this == typing;
+}
+
 class Contact {
   final String id;
   final String? email;
@@ -48,14 +56,17 @@ class Contact {
   final DateTime friendsSince;
 
   /// The status of the contact relationship
-  final FriendStatus contactStatus;
+  final FriendStatus friendStatus;
+
+  OnlineStatus onlineStatus;
 
   Contact({
     required this.id,
     required this.email,
     required this.username,
     required this.friendsSince,
-    required this.contactStatus,
+    required this.friendStatus,
+    this.onlineStatus = OnlineStatus.offline,
   });
 
   Contact copyWith({
@@ -63,14 +74,16 @@ class Contact {
     String? email,
     String? username,
     DateTime? friendsSince,
-    FriendStatus? contactStatus,
+    FriendStatus? friendStatus,
+    OnlineStatus? onlineStatus,
   }) {
     return Contact(
       id: id ?? this.id,
       email: email ?? this.email,
       username: username ?? this.username,
       friendsSince: friendsSince ?? this.friendsSince,
-      contactStatus: contactStatus ?? this.contactStatus,
+      friendStatus: friendStatus ?? this.friendStatus,
+      onlineStatus: onlineStatus ?? this.onlineStatus,
     );
   }
 
@@ -80,7 +93,7 @@ class Contact {
         email: null,
         username: data.username,
         friendsSince: data.createdAt,
-        contactStatus: FriendStatus.fromFlags(
+        friendStatus: FriendStatus.fromFlags(
             blockedIn: data.blockedIn,
             blockedOut: data.blockedOut,
             friendIn: data.friendRequestedIn,

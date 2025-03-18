@@ -49,11 +49,8 @@ class ChatCubit extends Cubit<ChatState> {
         currentUser: user,
       ));
 
-      // /// online status
-      // await _db.initStatusPresence(username);
-
-      /// contacts / chat rooms set up
-      await fetchContacts();
+      /// contacts / chat rooms and channels set up
+      await fetchContactsAndChannels();
 
       /// settings (sys prompt)
       await fetchSystemPrompt();
@@ -71,23 +68,65 @@ class ChatCubit extends Cubit<ChatState> {
   ///   CONTACTS
 
   /// fetch/refrsh all contacts and init the chat rooms
-  ///
-
-  Future<void> fetchContacts() async {
+  Future<void> fetchContactsAndChannels() async {
     emit(state.copyWith(status: ChatStatus.loading));
     try {
       /// contacts
       List<ContactModel> contactData =
           await _db.fetchContacts(state.currentUser!.id);
-      debugPrint(contactData.toString());
 
-      /// init chatrooms and realtime channels
-      Map<String, ChatRoom> chatrooms = {};
+      /// init/update chatrooms and realtime channels
+      Map<String, ChatRoom> chatrooms = state.chatroomsByUsername;
       for (ContactModel entry in contactData) {
-        // score, streak, contact data
-        chatrooms[entry.username] = ChatRoom.fromContactModel(entry);
-        // realtime channel
-        _db.addChannel(username: state.currentUser!.username, contactName: entry.username);
+        // init chatroom
+        if (state.chatroomsByUsername[entry.username] == null) {
+          // contact data and status, score and streak
+          chatrooms[entry.username] = ChatRoom.fromContactModel(entry);
+
+          // realtime channel if not blocked
+          if (!(entry.blockedIn || entry.blockedOut)) {
+            _db.setUpStatusChannel(
+              username: state.currentUser!.username,
+              contactName: entry.username,
+              statusCallback: (payload) {
+                print('status broadcast: $payload');
+              },
+              presenceCallback: ({required online, required username}) {
+                // can return own status todo: internet connection?
+                if (username == state.currentUser!.username) return;
+
+                Map<String, ChatRoom> chatrooms = state.chatroomsByUsername;
+
+                // only change if we have to
+                if (chatrooms[username]?.contact.onlineStatus.isOnline !=
+                    online) {
+                  chatrooms[username] = chatrooms[username]!
+                      .copyWithUpdatedOnlineStatus(
+                          online ? OnlineStatus.online : OnlineStatus.offline);
+
+                  // reemit:
+                  // todo maybe refactor with some update flag in the state.
+                  emit(state.copyWith(chatroomsByUsername: chatrooms));
+                }
+              },
+            );
+          }
+        }
+
+        // update friend status
+        else {
+          chatrooms[entry.username] = chatrooms[entry.username]!
+              .copyWithUpdatedFriendStatus(FriendStatus.fromFlags(
+            blockedIn: entry.blockedIn,
+            blockedOut: entry.blockedOut,
+            friendIn: entry.friendRequestedIn,
+            friendOut: entry.friendRequestedOut,
+          ));
+
+          if (entry.blockedIn || entry.blockedOut) {
+            // todo: close channel.
+          }
+        }
       }
 
       emit(state.copyWith(
@@ -134,7 +173,7 @@ class ChatCubit extends Cubit<ChatState> {
             email: null,
             username: friendUsername,
             friendsSince: DateTime.now(),
-            contactStatus: FriendStatus.requestedOut,
+            friendStatus: FriendStatus.requestedOut,
           ),
           messages: [],
           userScore: 0,
@@ -150,7 +189,7 @@ class ChatCubit extends Cubit<ChatState> {
         /// update contact status
         state.chatroomsByUsername[friendUsername] = state
             .chatroomsByUsername[friendUsername]!
-            .copyWithUpdatedContactStatus(FriendStatus.friend);
+            .copyWithUpdatedFriendStatus(FriendStatus.friend);
       }
 
       emit(state.copyWith(status: ChatStatus.success));
@@ -315,9 +354,7 @@ class ChatCubit extends Cubit<ChatState> {
 
   @override
   Future<void> close() {
+    _db.close();
     return super.close();
-
-    // todo: close all supabase channels etc.
-
   }
 }

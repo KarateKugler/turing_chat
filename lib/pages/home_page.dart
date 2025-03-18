@@ -23,7 +23,7 @@ class _HomePageState extends State<HomePage> {
   /// refresh contacts
   Future<void> _onRefresh() async {
     ChatCubit chatCubit = context.read<ChatCubit>();
-    await chatCubit.fetchContacts();
+    await chatCubit.fetchContactsAndChannels();
   }
 
   @override
@@ -35,17 +35,26 @@ class _HomePageState extends State<HomePage> {
         title: Text('⌘ turing_chat ⍜'),
         centerTitle: true,
       ),
-      body: BlocListener<AuthCubit, AuthState>(
-        listener: (context, state) {},
-        child: Stack(children: [
-          BlocConsumer<ChatCubit, ChatState>(
+      // do multi bloc listener
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<AuthCubit, AuthState>(
+            listener: (context, state) {},
+          ),
+          BlocListener<ChatCubit, ChatState>(
             listener: (context, state) {
               if (state.status == ChatStatus.error) {
                 ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(state.errorMessage ?? '')));
               }
             },
+          ),
+        ],
+        child: Stack(children: [
+          BlocBuilder<ChatCubit, ChatState>(
+            buildWhen: (previous, current) => true,
             builder: (context, state) {
+              // todo: build when contact status changed.
               debugPrint(state.toString()); //todo rmv
               return CustomMaterialIndicator(
                 onRefresh: _onRefresh,
@@ -75,17 +84,20 @@ class _HomePageState extends State<HomePage> {
                     MapEntry<String, ChatRoom> entry =
                         state.chatroomsByUsername.entries.elementAt(index);
 
+                    print(entry.value.contact.onlineStatus);
+
                     /// The List of Chat Rooms with Friends
                     return Padding(
                       padding: const EdgeInsets.all(4.0),
                       child: ContactTile(
                         text: entry.key,
-                        status: entry.value.contact.contactStatus,
+                        friendStatus: entry.value.contact.friendStatus,
                         onTap: () {
                           // Navigate to chat room with the chatroom data
                           context.push('/chat/${entry.value.contact.id}',
                               extra: entry.value);
                         },
+                        onlineStatus: entry.value.contact.onlineStatus,
                       ),
                     );
                   },

@@ -16,7 +16,10 @@ final class ChatState {
   final User? currentUser;
   /// The complete list of chatrooms by username and the associated contacts,
   /// whether they are friends, requested friends, blocked or otherwise.
-  final Map<String, ChatRoom> chatroomsByUsername; // could add separate list of contacts, but introduces more room for error
+  // could add separate list of contacts, but introduces more room for error
+  // would have to set with Map.unmodifiable() if we want true immutable state
+  // -> maybe ask in bloc discord
+  final Map<String, ChatRoom> chatroomsByUsername;
   /// The customizable system prompt for sending generated messages
   final Settings userSettings;
 
