@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:turing_chat/theme/style.dart';
 
-import '../models/message.dart';
+import '../../models/message.dart';
 
 class MessageBubble extends StatelessWidget {
   final Message message;

@@ -154,7 +154,7 @@ class DatabaseService {
 
         final List<SinglePresenceState> newState = channel.presenceState();
         print('sync: $newState');
-        print('sync payload: ${newState.first}');
+        // print('sync payload: ${newState.first}');
 
         // for (SinglePresenceState presence in newState) {
         //   String? name = presence.payload['username'];

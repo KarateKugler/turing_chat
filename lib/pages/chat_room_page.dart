@@ -4,15 +4,15 @@ import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:turing_chat/models/contact.dart';
-import 'package:turing_chat/widgets/chat_input_field.dart';
+import 'package:turing_chat/widgets/chat_widgets/chat_input_field.dart';
 import 'package:turing_chat/widgets/loading_widget.dart';
 
 import '../logic/chat_cubit.dart';
 import '../models/chat_room.dart';
 import '../models/message.dart';
 import '../theme/style.dart';
-import '../widgets/game_overlay.dart';
-import '../widgets/message_bubble.dart';
+import '../widgets/chat_widgets/game_overlay.dart';
+import '../widgets/chat_widgets/message_bubble.dart';
 
 /// The Chat Room page
 
@@ -53,8 +53,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   bool _generateLoading = false;
 
   /// Selecting a message
-  Message? _selectedMessage;
-  Widget? _selectedMessageBubble;
+  List<MessageBubble>? _selectedMessageBubble;
 
   @override
   void initState() {
@@ -81,10 +80,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   /// msg bubble
 
-  void _handleMessageLongPress(Message message, Widget messageBubble) {
+  void _handleMessageLongPress(Message message, MessageBubble messageBubble) {
     setState(() {
-      _selectedMessage = message;
-      _selectedMessageBubble = messageBubble;
+      _selectedMessageBubble = [messageBubble];
     });
   }
 
@@ -92,7 +90,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   void _handleTapOutside() {
     setState(() {
-      _selectedMessage = null;
       _selectedMessageBubble = null;
     });
   }
@@ -424,7 +421,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
         // The blur/ fcs overlay
         GameOverlay(
-          messageBubble: _selectedMessageBubble,
+          messageBubbles: _selectedMessageBubble,
           onAction: _handleExposeAction,
         ),
       ],
