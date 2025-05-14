@@ -1,6 +1,41 @@
-/// A blur overlay that displays a selected message with glow effects and
-/// action buttons for interaction. Animates in/out smoothly when a message
-/// is selected/deselected.
+/// GameOverlay Widget
+/// 
+/// A modular, animation-rich overlay system that displays a selected message with
+/// visual effects and interactive elements.
+///
+/// # Architecture Overview
+///
+/// This file implements a modular overlay system with these key components:
+///
+/// 1. Main Container (GameOverlay): Orchestrates the overlay system and manages state
+/// 2. Animation Constants (OverlayAnimations): Centralizes all animation parameters
+/// 3. Component Widgets:
+///    - _AnimatedBlurBackground: Handles backdrop effects
+///    - _MessageBubbleWithGlow: Manages message display and glow effects
+///    - _AnimatedActionButton: Controls interaction buttons with animations
+///
+/// # Modularization Benefits
+///
+/// - Single Responsibility: Each component has a focused purpose
+/// - Maintainability: Changes to one component don't affect others
+/// - Reusability: Components can be used in other contexts
+/// - Testability: Components can be tested in isolation
+/// - Readability: Clear separation makes code intent obvious
+///
+/// # Usage Example
+///
+/// Place this widget above your chat interface:
+///
+/// ```dart
+/// Stack(
+///   children: [
+///     ChatMessages(),
+///     GameOverlay(), // Appears when a message is selected
+///   ],
+/// )
+/// ```
+///
+/// The overlay automatically responds to state changes in the ChatCubit.
 ///
 /// ofc tap outside ret
 ///
@@ -21,6 +56,12 @@ import 'package:turing_chat/widgets/chat_widgets/message_bubble.dart';
 import '../../logic/chat_cubit.dart';
 
 /// Animation constants for overlay effects
+///
+/// This class centralizes all animation-related values to:
+/// - Provide a single place to modify animation parameters
+///
+/// Using a private constructor prevents instantiation, enforcing
+/// access through static constants only.
 class OverlayAnimations {
   // Colors
   static const glowColor = Color(0xA35F00FF);
@@ -46,6 +87,23 @@ class OverlayAnimations {
 }
 
 /// The main overlay widget for handling message selection and actions
+///
+/// # Responsibilities
+///
+/// 1. State Management:
+///    - Track animation state and active status
+///    - Respond to ChatCubit state changes
+///
+/// 2. Animation Control:
+///    - Initialize and dispose animation controllers
+///    - Control forward/reverse animations based on state
+///
+/// 3. Coordination:
+///    - Combine component widgets (_AnimatedBlurBackground,
+///      _MessageBubbleWithGlow, _AnimatedActionButton)
+///    - Pass appropriate animations to each component
+///
+/// delegates rendering to specialized component widgets
 class GameOverlay extends StatefulWidget {
   const GameOverlay({super.key});
 
@@ -53,29 +111,32 @@ class GameOverlay extends StatefulWidget {
   State<GameOverlay> createState() => _GameOverlayState();
 }
 
-/// This widget has two purposes:
+/// State for the GameOverlay widget
 ///
-/// 1. Select one of your own messages:
-///   - delete
-///   - reply
+/// This state manages animation controllers and responds to
+/// state changes from the ChatCubit. It uses a modular design where
+/// UI rendering is delegated to specialized components.
 ///
-/// 2. select friends message:
-///   - reply
-///   - guess 'generated'
-///   - (last few messages get shown)
+/// # Modular Architecture:
 ///
-/// So the animation should go like this:
+/// The state class focuses on:
+/// - Animation setup and management
+/// - Building the component tree
+/// - State change detection
 ///
-/// The background opacity/blur animation starts at the same time as
-/// The Button and Messages animation starts
-///
-/// The last ~5 messages slide+fade in from the top, staggered,
-/// i.e. animation duration 200ms, stagger offset of 100ms
+/// Components handle their specific rendering concerns.
 class _GameOverlayState extends State<GameOverlay>
     with SingleTickerProviderStateMixin {
+  /// Controls all animations timing
   late AnimationController _controller;
+  
+  /// Controls the blur intensity animation
   late Animation<double> _blurAnimation;
+  
+  /// Controls opacity and element transitions
   late Animation<double> _opacityAnimation;
+  
+  /// Whether the overlay is currently active
   bool _active = false;
 
   @override
@@ -85,13 +146,16 @@ class _GameOverlayState extends State<GameOverlay>
   }
 
   /// Set up all animation controllers and animations
+  ///
+  /// This method initializes all animations in one place
   void _initializeAnimations() {
+    // Main controller that drives all animations
     _controller = AnimationController(
       vsync: this,
       duration: OverlayAnimations.duration,
     );
 
-    // Blur animation
+    // Blur animation for background effect
     _blurAnimation = Tween<double>(
       begin: 0.0, 
       end: OverlayAnimations.blurIntensity,
@@ -100,7 +164,7 @@ class _GameOverlayState extends State<GameOverlay>
       curve: OverlayAnimations.curve,
     ));
 
-    // Opacity animation
+    // Opacity animation for element fading
     _opacityAnimation = Tween<double>(
       begin: 0.0, 
       end: 1.0,
@@ -112,11 +176,14 @@ class _GameOverlayState extends State<GameOverlay>
 
   @override
   void dispose() {
+    // Properly dispose animation resources
     _controller.dispose();
     super.dispose();
   }
 
   /// Handle tap outside the message bubble to dismiss
+  ///
+  /// This creates a smooth dismissal experience
   void _onTapOutside() {
     _controller.reverse();
     
@@ -148,6 +215,9 @@ class _GameOverlayState extends State<GameOverlay>
   }
 
   /// Handle state changes from the ChatCubit
+  ///
+  /// - When a message becomes selected, start forward animation
+  /// - When a message becomes deselected, start reverse animation
   void _handleStateChanges(ChatState state) {
     if (state.selectedMessageIndex != -1 && !_active) {
       _controller.forward();
@@ -170,26 +240,35 @@ class _GameOverlayState extends State<GameOverlay>
   }
 
   /// Build the main overlay content with animations
+  ///
+  /// # Modular Component Assembly
+  ///
+  /// Adding components with:
+  ///    - Appropriate animation values
+  ///    - Required data (message)
+  ///    - Callback functions
+  ///
+  /// Each component handles its own rendering details.
   Widget _buildOverlayContent(Message message) {
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
         return Stack(
           children: [
-            // Background blur
+            // Background blur - handled by dedicated component
             _AnimatedBlurBackground(
               blurAnimation: _blurAnimation,
               opacityAnimation: _opacityAnimation,
               onTap: _onTapOutside,
             ),
 
-            // Message bubble
+            // Message bubble - handled by dedicated component
             _MessageBubbleWithGlow(
               message: message,
               opacityAnimation: _opacityAnimation,
             ),
 
-            // Action button
+            // Action button - handled by dedicated component
             _AnimatedActionButton(
               message: message,
               opacityAnimation: _opacityAnimation,
@@ -202,9 +281,25 @@ class _GameOverlayState extends State<GameOverlay>
 }
 
 /// Animated background with blur effect
+///
+/// - Rendering the fullscreen backdrop
+/// - Applying animated blur effect
+/// - Managing the background gradient
+/// - Handling tap detection
+///
+/// - Isolates backdrop rendering logic
+/// - Can be reused for other overlay effects
+///
+/// The component accepts animations as parameters rather than
+/// creating its own. (dependency injection)
 class _AnimatedBlurBackground extends StatelessWidget {
+  /// Animation that controls blur intensity
   final Animation<double> blurAnimation;
+  
+  /// Animation that controls background opacity
   final Animation<double> opacityAnimation;
+  
+  /// Callback when background is tapped
   final VoidCallback onTap;
 
   const _AnimatedBlurBackground({
@@ -244,8 +339,16 @@ class _AnimatedBlurBackground extends StatelessWidget {
 }
 
 /// Message bubble with glow effect
+///
+/// - Encapsulates message display logic
+///
+/// The Stack configuration creates the glow effect behind the actual
+/// message bubble.
 class _MessageBubbleWithGlow extends StatelessWidget {
+  /// The message to display
   final Message message;
+  
+  /// Animation that controls opacity and other effects
   final Animation<double> opacityAnimation;
 
   const _MessageBubbleWithGlow({
@@ -265,6 +368,7 @@ class _MessageBubbleWithGlow extends StatelessWidget {
               opacity: opacityAnimation.value,
               child: Stack(
                 children: [
+                  // Glow effect layer - positioned behind the message
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
@@ -278,6 +382,7 @@ class _MessageBubbleWithGlow extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // Actual message bubble
                   MessageBubble(message: message),
                 ],
               ),
@@ -290,8 +395,16 @@ class _MessageBubbleWithGlow extends StatelessWidget {
 }
 
 /// Animated action button with glow effect
+///
+/// - Isolates button rendering and behavior
+///
+/// The button uses animated padding and glow effects that
+/// respond to the same animation as other components.
 class _AnimatedActionButton extends StatelessWidget {
+  /// The message that the action applies to
   final Message message;
+  
+  /// Animation that controls button effects
   final Animation<double> opacityAnimation;
 
   const _AnimatedActionButton({
@@ -325,6 +438,7 @@ class _AnimatedActionButton extends StatelessWidget {
               icon: const Icon(Icons.content_paste_search),
               label: const Text('  C L A S S I F Y'),
               style: FilledButton.styleFrom(
+                // Dynamic padding creates a "growing" effect
                 padding: EdgeInsets.symmetric(
                   horizontal: OverlayAnimations.buttonMinPadding + 
                     (OverlayAnimations.buttonMaxPadding - OverlayAnimations.buttonMinPadding) * 
@@ -344,6 +458,8 @@ class _AnimatedActionButton extends StatelessWidget {
   }
 
   /// Send message for classification
+  ///
+  /// This method keeps business logic for the button separated from the UI rendering code.
   void _classifyMessage(BuildContext context) {
     context.read<ChatCubit>().classifyMessage(messageId: message.id);
   }
