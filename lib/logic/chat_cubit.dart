@@ -24,6 +24,8 @@ class ChatCubit extends Cubit<ChatState> {
             systemPrompt: '',
             promptUpdatedAt: DateTime.fromMicrosecondsSinceEpoch(0),
           ),
+          chatroomContactUsername: '',
+          selectedMessageIndex: -1,
         ));
 
   /// Initialize the ChatCubit
@@ -74,6 +76,15 @@ class ChatCubit extends Cubit<ChatState> {
 
   void chatError(String errorMessage) {
     emit(state.copyWith(status: ChatStatus.error, errorMessage: errorMessage));
+  }
+
+  /// emit the ChatRoomState for the selected contact
+  void openChatRoom(String contactUsername) {
+    emit(state.copyWith(chatroomContactUsername: contactUsername));
+  }
+
+  void closeChatRoom() {
+    emit(state.copyWith(chatroomContactUsername: ''));
   }
 
   /// /////////////////////////////////
@@ -241,6 +252,7 @@ class ChatCubit extends Cubit<ChatState> {
               .add(Message.fromModel(message, state.currentUser!.id));
 
           print('emit new msg!');
+
           /// todo refresh flag
           emit(state.copyWith(chatroomsByUsername: state.chatroomsByUsername));
         },
@@ -323,6 +335,64 @@ class ChatCubit extends Cubit<ChatState> {
       emit(
           state.copyWith(status: ChatStatus.error, errorMessage: e.toString()));
     }
+  }
+
+  void selectMessage(int messageIndex) {
+    emit(state.copyWith(selectedMessageIndex: messageIndex));
+  }
+
+  void deselectMessage() {
+    emit(state.copyWith(selectedMessageIndex: -1));
+  }
+
+  Future<void> updateCurrentChatroom() async {
+    try {
+      // get the contact of the current chatroom
+      Contact contact =
+          state.chatroomsByUsername[state.chatroomContactUsername]!.contact;
+      String contactId = contact.id;
+
+      // fetch the contact data
+      ContactModel contactModel = await _db.fetchContact(
+          userId: state.currentUser!.id, contactId: contactId);
+
+      // update scores
+      state.chatroomsByUsername[state.chatroomContactUsername] =
+          state.chatroomsByUsername[state.chatroomContactUsername]!.copyWith(
+        contactScore: contactModel.contactScore,
+        contactStreak: contactModel.contactStreak,
+        userScore: contactModel.userScore,
+        userStreak: contactModel.userStreak,
+      );
+
+      // update messages
+      fetchMessages(contact.username);
+      // (emits success)
+    } catch (e) {
+      emit(
+          state.copyWith(status: ChatStatus.error, errorMessage: e.toString()));
+      debugPrint(e.toString());
+    }
+  }
+
+  Future<void> classifyMessage({
+    required String messageId,
+    bool guess = true,
+  }) async {
+    emit(state.copyWith(status: ChatStatus.loading));
+
+    // 1. call the classify fct.
+    // we simply set the identified column of the given message as TRUE
+    // i.e. UPDATE messages SET identified = TRUE WHERE id = message_id
+    // Then the policy on gen_flags allows for read
+    // We update the streak and score
+    // 2. refetch the contact data, and the messages data
+    // 3. update state and emit success.
+
+    await _db.classifyMessage(messageId: messageId, guess: guess);
+
+    updateCurrentChatroom();
+    // (emits success)
   }
 
   /// /////////////////////////////////

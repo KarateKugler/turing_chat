@@ -40,8 +40,8 @@ class ContactModel {
       contactId: json['contact_id'],
       username: json['username'],
       userScore: json['sender_score'] ?? 0,
-      contactScore: json['sender_streak'] ?? 0,
-      userStreak: json['receiver_score'] ?? 0,
+      userStreak: json['sender_streak'] ?? 0,
+      contactScore: json['receiver_score'] ?? 0,
       contactStreak: json['receiver_streak'] ?? 0,
       createdAt: DateTime.parse(json['created_at']),
     );

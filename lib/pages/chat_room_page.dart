@@ -63,46 +63,29 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   @override
   void didChangeDependencies() {
-    super.didChangeDependencies();
     ChatCubit chatCubit = context.read<ChatCubit>();
     chatCubit.fetchMessages(widget.chatRoom.contact.username);
     // listen to messages
     chatCubit.addMessageSubscription(widget.chatRoom.contact.username);
+    super.didChangeDependencies();
   }
 
   @override
   void dispose() {
     // remove message listener
-    context.read<ChatCubit>().removeMessageSubscription(widget.chatRoom.contact.username);
+    context
+        .read<ChatCubit>()
+        .removeMessageSubscription(widget.chatRoom.contact.username);
     _inputController.dispose();
     super.dispose();
   }
 
   /// msg bubble
 
-  void _handleMessageLongPress(Message message, MessageBubble messageBubble) {
-    setState(() {
-      _selectedMessageBubble = [messageBubble];
-    });
-  }
-
-  /// blur wgt funcs
-
-  void _handleTapOutside() {
-    setState(() {
-      _selectedMessageBubble = null;
-    });
-  }
-
-  void _handleExposeAction() {
-    // This would be implemented to handle the "Expose" action
-    // For now, just dismiss the blur
-    _handleTapOutside();
-
-    // In a real implementation, you would:
-    // 1. Send a request to the backend to check if the message was generated
-    // 2. Update the UI based on the response
-    // 3. Update scores, etc.
+  void _handleMessageLongPress(int messageIndex) {
+    // change state, just emit with selected message index,
+    // rest is done by cubit and the overlay widget
+    context.read<ChatCubit>().selectMessage(messageIndex);
   }
 
   @override
@@ -120,42 +103,46 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
               // Score display
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                child: BlocBuilder<ChatCubit, ChatState>(
+                  builder: (context, state) {
+                    return Row(
                       children: [
-                        Text(
-                          'You: ${widget.chatRoom.userScore}',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 12,
-                          ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'You: ${state.chatroomsByUsername[state.chatroomContactUsername]!.userScore}',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              '🔥 ${state.chatroomsByUsername[state.chatroomContactUsername]!.userStreak}',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ],
                         ),
-                        Text(
-                          '🔥 ${widget.chatRoom.userStreak}',
-                          style: const TextStyle(fontSize: 12),
+                        const SizedBox(width: 16),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Them: ${state.chatroomsByUsername[state.chatroomContactUsername]!.contactScore}',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              '🔥 ${state.chatroomsByUsername[state.chatroomContactUsername]!.contactStreak}',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ],
                         ),
                       ],
-                    ),
-                    const SizedBox(width: 16),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Them: ${widget.chatRoom.contactScore}',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 12,
-                          ),
-                        ),
-                        Text(
-                          '🔥 ${widget.chatRoom.contactStreak}',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
             ],
@@ -164,7 +151,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
           /// Page body
           body: Column(
             children: [
-              /// Sliver list of messages
               Expanded(
                 child: ClipRRect(
                   child: BlocBuilder<ChatCubit, ChatState>(
@@ -234,6 +220,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                     state.status == ChatStatus.error,
                               );
                             },
+
+                            /// Sliver list of messages
                             child: CustomScrollView(
                               reverse: true,
                               // Show latest messages at the bottom
@@ -254,12 +242,13 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                           key: key,
                                           message: message,
                                           onLongPress: () {
-                                            _inputFocusNode.unfocus();
+                                            /// currently only messages sent by contact
+                                            if (!message.sentByUser) {
+                                              _inputFocusNode.unfocus();
 
-                                            _handleMessageLongPress(
-                                              message,
-                                              MessageBubble(message: message),
-                                            );
+                                              _handleMessageLongPress(
+                                                  messages.length - index - 1);
+                                            }
                                           },
                                         );
 
@@ -384,8 +373,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
                                     /// and refresh
 
-                                    await Future.delayed(
-                                        Duration(seconds: 1));
+                                    await Future.delayed(Duration(seconds: 1));
 
                                     chatCubit.fetchMessages(
                                         widget.chatRoom.contact.username);
@@ -420,10 +408,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         ),
 
         // The blur/ fcs overlay
-        GameOverlay(
-          messageBubbles: _selectedMessageBubble,
-          onAction: _handleExposeAction,
-        ),
+        const GameOverlay(),
       ],
     );
   }

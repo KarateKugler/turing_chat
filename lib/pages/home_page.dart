@@ -93,6 +93,9 @@ class _HomePageState extends State<HomePage> {
                         text: entry.key,
                         friendStatus: entry.value.contact.friendStatus,
                         onTap: () {
+                          // emit ChatRoomState
+                          context.read<ChatCubit>().openChatRoom(entry.key);
+
                           // Navigate to chat room with the chatroom data
                           context.push('/chat/${entry.value.contact.id}',
                               extra: entry.value);

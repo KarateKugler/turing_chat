@@ -113,6 +113,24 @@ class DatabaseService {
     return contacts;
   }
 
+  Future<ContactModel> fetchContact(
+      {required String userId, required String contactId}) async {
+    try {
+      List? response = await _client.rpc('get_contact',
+          params: {'user_id': userId, 'cont_id': contactId});
+
+      ContactModel result = ContactModel.fromJson(
+          json: response!.first, friendIn: true, friendOut: true);
+
+      return result;
+    }
+
+    /// ...
+    catch (e) {
+      rethrow;
+    }
+  }
+
   /// ///////////////////////////////////
   /// realtime
 
@@ -127,7 +145,9 @@ class DatabaseService {
 
     RealtimeChannel channel = _client.channel(
       channelName,
-      opts: const RealtimeChannelConfig(private: true,),
+      opts: const RealtimeChannelConfig(
+        private: true,
+      ),
     );
 
     _channels[contactName] = channel;
@@ -149,52 +169,56 @@ class DatabaseService {
       RealtimeChannel channel = _channels[contactName]!;
 
       // todo subscribe to broadcast on `typing` events
-      RealtimeChannel subcription = channel..onPresenceSync((payload) {
-        /// sync
+      RealtimeChannel subcription = channel
+        ..onPresenceSync((payload) {
+          /// sync
 
-        final List<SinglePresenceState> newState = channel.presenceState();
-        print('sync: $newState');
-        // print('sync payload: ${newState.first}');
+          final List<SinglePresenceState> newState = channel.presenceState();
+          print('sync: $newState');
+          // print('sync payload: ${newState.first}');
 
-        // for (SinglePresenceState presence in newState) {
-        //   String? name = presence.payload['username'];
-        //   if (name != null) {
-        //     presenceCallback(username: name, online: false); // ok
-        //   }
-        // }
-      })..onPresenceLeave((payload) {
-        /// leave
+          // for (SinglePresenceState presence in newState) {
+          //   String? name = presence.payload['username'];
+          //   if (name != null) {
+          //     presenceCallback(username: name, online: false); // ok
+          //   }
+          // }
+        })
+        ..onPresenceLeave((payload) {
+          /// leave
 
-        print('leave: $payload');
+          print('leave: $payload');
 
-        for (Presence presence in payload.leftPresences) {
-          String? name = presence.payload['username'];
-          if (name != null) {
-            presenceCallback(username: name, online: false); // ok
+          for (Presence presence in payload.leftPresences) {
+            String? name = presence.payload['username'];
+            if (name != null) {
+              presenceCallback(username: name, online: false); // ok
+            }
           }
-        }
-      })..onPresenceJoin((payload) {
-        /// join
+        })
+        ..onPresenceJoin((payload) {
+          /// join
 
-        print('join: $payload');
+          print('join: $payload');
 
-        for (Presence presence in payload.newPresences) {
-          String? name = presence.payload['username'];
-          if (name != null) {
-            presenceCallback(username: name, online: true); // ok
+          for (Presence presence in payload.newPresences) {
+            String? name = presence.payload['username'];
+            if (name != null) {
+              presenceCallback(username: name, online: true); // ok
+            }
           }
-        }
-      })..subscribe(
-        (status, error) async {
-          /// and track own status
+        })
+        ..subscribe(
+          (status, error) async {
+            /// and track own status
 
-          if (status == RealtimeSubscribeStatus.subscribed) {
-            final presenceTrackStatus =
-                await channel.track({'username': username});
-            print('presenceTrackStatus: $presenceTrackStatus');
-          }
-        },
-      );
+            if (status == RealtimeSubscribeStatus.subscribed) {
+              final presenceTrackStatus =
+                  await channel.track({'username': username});
+              print('presenceTrackStatus: $presenceTrackStatus');
+            }
+          },
+        );
 
       _statusSubscriptions[contactName] = subcription;
     } catch (e) {
@@ -267,9 +291,6 @@ class DatabaseService {
 
   /// broadcast a message
 
-
-
-
   /// /////////////////////////////////
   ///   MESSAGES
 
@@ -331,6 +352,25 @@ class DatabaseService {
       });
     } catch (e) {
       // todo handle specific error types
+      rethrow;
+    }
+  }
+
+  Future<void> classifyMessage({
+    required String messageId,
+    required bool guess,
+  }) async {
+    // 1. call and await the rpc fct.
+    ///
+    try {
+      await _client.rpc('guess_message', params: {
+        'message_id': messageId,
+        'guess': guess,
+      });
+    }
+
+    ///
+    catch (e) {
       rethrow;
     }
   }
