@@ -285,7 +285,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     '\n\nBy default you use a prompt that is adapted from ',
                                   ),
                                   TextSpan(
-                                    text: '(Jones & Bergen, 2024)',
+                                    text: '\"People cannot distinguish GPT-4 from a human in a Turing test\" (Jones & Bergen, 2024)',
                                     style: TextStyle(
                                       fontFamily: 'serif',
                                       fontStyle: FontStyle.italic,

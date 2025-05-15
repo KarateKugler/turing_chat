@@ -9,6 +9,7 @@ import 'package:turing_chat/logic/chat_cubit.dart';
 import 'package:turing_chat/widgets/contact_tile.dart';
 
 import '../models/chat_room.dart';
+import '../models/message.dart';
 import '../widgets/add_friend_button.dart';
 import '../widgets/home_drawer.dart';
 
@@ -86,6 +87,16 @@ class _HomePageState extends State<HomePage> {
 
                     print(entry.value.contact.onlineStatus);
 
+                    // Get the last message if there are any messages
+                    String? lastMessage;
+                    bool isLastMessageFromUser = false;
+                    
+                    if (entry.value.messages.isNotEmpty) {
+                      Message message = entry.value.messages.last;
+                      lastMessage = message.content;
+                      isLastMessageFromUser = message.sentByUser;
+                    }
+
                     /// The List of Chat Rooms with Friends
                     return Padding(
                       padding: const EdgeInsets.all(4.0),
@@ -101,6 +112,8 @@ class _HomePageState extends State<HomePage> {
                               extra: entry.value);
                         },
                         onlineStatus: entry.value.contact.onlineStatus,
+                        lastMessage: lastMessage,
+                        isLastMessageFromUser: isLastMessageFromUser,
                       ),
                     );
                   },

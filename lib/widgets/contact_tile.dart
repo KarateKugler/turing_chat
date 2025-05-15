@@ -12,6 +12,8 @@ class ContactTile extends StatelessWidget {
   final FriendStatus friendStatus;
   final OnlineStatus onlineStatus;
   final void Function()? onTap;
+  final String? lastMessage;
+  final bool isLastMessageFromUser;
 
   const ContactTile({
     required this.text,
@@ -19,6 +21,8 @@ class ContactTile extends StatelessWidget {
     required this.friendStatus,
     required this.onlineStatus,
     this.onTap,
+    this.lastMessage,
+    this.isLastMessageFromUser = false,
     super.key,
   });
 
@@ -135,7 +139,9 @@ class ContactTile extends StatelessWidget {
         subtitle: Padding(
           padding: const EdgeInsets.symmetric(vertical: 5.0),
           child: Text(
-            'lorem ipsum dolor sit amet amet amet bla bla here comes the drop',
+            lastMessage != null 
+                ? (isLastMessageFromUser ? 'you? :  ' : '$text? :  ') + lastMessage!
+                : '',
             style: Theme.of(context).textTheme.labelMedium!.copyWith(),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
