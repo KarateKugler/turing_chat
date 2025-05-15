@@ -1,5 +1,5 @@
 /// GameOverlay Widget
-/// 
+///
 /// A modular, animation-rich overlay system that displays a selected message with
 /// visual effects and interactive elements.
 ///
@@ -51,6 +51,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:turing_chat/models/message.dart';
+import 'package:turing_chat/widgets/loading_text.dart';
 import 'package:turing_chat/widgets/chat_widgets/message_bubble.dart';
 
 import '../../logic/chat_cubit.dart';
@@ -65,23 +66,23 @@ import '../../logic/chat_cubit.dart';
 class OverlayAnimations {
   // Colors
   static const glowColor = Color(0xA35F00FF);
-  
+
   // Animation parameters
   static const blurIntensity = 5.0;
   static const duration = Duration(milliseconds: 500);
   static const curve = Curves.easeInOut;
-  
+
   // Button animation values
   static const buttonMinPadding = 12.0;
   static const buttonMaxPadding = 60.0;
   static const buttonBottom = 40.0;
   static const buttonBorderRadius = 30.0;
-  
+
   // Glow effect values
   static const glowBlurRadius = 30.0;
   static const glowMinSpread = -10.0;
   static const glowMaxSpread = 5.0;
-  
+
   // Prevent instantiation
   OverlayAnimations._();
 }
@@ -111,6 +112,9 @@ class GameOverlay extends StatefulWidget {
   State<GameOverlay> createState() => _GameOverlayState();
 }
 
+/// Classification status for selected message
+enum ClassificationStatus { unclassified, loading, classified, error }
+
 /// State for the GameOverlay widget
 ///
 /// This state manages animation controllers and responds to
@@ -129,15 +133,25 @@ class _GameOverlayState extends State<GameOverlay>
     with SingleTickerProviderStateMixin {
   /// Controls all animations timing
   late AnimationController _controller;
-  
+
   /// Controls the blur intensity animation
   late Animation<double> _blurAnimation;
-  
+
   /// Controls opacity and element transitions
   late Animation<double> _opacityAnimation;
-  
+
   /// Whether the overlay is currently active
   bool _active = false;
+
+  /// Current classification status of the selected message
+  ClassificationStatus _classificationStatus =
+      ClassificationStatus.unclassified;
+
+  /// Classification result (true if generated, false if not)
+  bool? _isGenerated;
+
+  /// Correct guess or not?
+  bool? _guessedCorrectly;
 
   @override
   void initState() {
@@ -157,19 +171,19 @@ class _GameOverlayState extends State<GameOverlay>
 
     // Blur animation for background effect
     _blurAnimation = Tween<double>(
-      begin: 0.0, 
+      begin: 0.0,
       end: OverlayAnimations.blurIntensity,
     ).animate(CurvedAnimation(
-      parent: _controller, 
+      parent: _controller,
       curve: OverlayAnimations.curve,
     ));
 
     // Opacity animation for element fading
     _opacityAnimation = Tween<double>(
-      begin: 0.0, 
+      begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
-      parent: _controller, 
+      parent: _controller,
       curve: OverlayAnimations.curve,
     ));
   }
@@ -181,21 +195,29 @@ class _GameOverlayState extends State<GameOverlay>
     super.dispose();
   }
 
-  /// Handle tap outside the message bubble to dismiss
+  /// If not currently loading:
+  /// Handle dismissal of the overlay through various triggers
   ///
   /// This creates a smooth dismissal experience
-  void _onTapOutside() {
-    _controller.reverse();
-    
-    // Unfocus after animation completes
-    Future.delayed(OverlayAnimations.duration).then((_) {
-      setState(() {
-        _active = false;
+  void _dismissOverlay() {
+    if (_classificationStatus != ClassificationStatus.loading) {
+      _controller.reverse();
+
+      ChatCubit chatCubit = context.read<ChatCubit>();
+
+      // Unfocus after animation completes
+      Future.delayed(OverlayAnimations.duration).then((_) {
+        setState(() {
+          _active = false;
+        });
+        chatCubit.deselectMessage();
       });
-      context.read<ChatCubit>().deselectMessage();
-    });
+    }
   }
 
+  /// /// ///
+  /// BUILD METHOD
+  /// /// ///
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ChatCubit, ChatState>(
@@ -206,7 +228,15 @@ class _GameOverlayState extends State<GameOverlay>
         // Only show overlay when a message is selected
         if (state.selectedMessageIndex != -1) {
           Message selectedMessage = _getSelectedMessage(state);
-          return _buildOverlayContent(selectedMessage);
+          return PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, result) {
+              if (!didPop) {
+                _dismissOverlay();
+              } // Prevent the automatic pop
+            },
+            child: _buildOverlayContent(selectedMessage),
+          );
         } else {
           return const SizedBox.shrink();
         }
@@ -218,18 +248,71 @@ class _GameOverlayState extends State<GameOverlay>
   ///
   /// - When a message becomes selected, start forward animation
   /// - When a message becomes deselected, start reverse animation
+  /// - if a message is selected, handle logic changes from cubit state
   void _handleStateChanges(ChatState state) {
+    /// Just selected a message, ACTIVATE WIDGET
     if (state.selectedMessageIndex != -1 && !_active) {
       _controller.forward();
       setState(() {
         _active = true;
+
+        // Check if the selected message is already classified
+        Message selectedMessage = _getSelectedMessage(state);
+
+        // message is UNCLASSIFIED
+        if (selectedMessage.correctlyIdentified == null) {
+          _classificationStatus = ClassificationStatus.unclassified;
+          _isGenerated = null;
+          _guessedCorrectly = null;
+        }
+
+        // message was CLASSIFIED
+        else {
+          _classificationStatus = ClassificationStatus.classified;
+          _isGenerated = selectedMessage.generated;
+          _guessedCorrectly = selectedMessage.correctlyIdentified;
+        }
       });
-    } else if (state.selectedMessageIndex == -1 && _active) {
+    }
+
+    /// Message was deselected, DEACTIVATE WIDGET
+    else if (state.selectedMessageIndex == -1 && _active) {
       _controller.reverse().then((_) {
         setState(() {
           _active = false;
+          _classificationStatus = ClassificationStatus.unclassified;
+          _isGenerated = null;
+          _guessedCorrectly = null;
         });
       });
+    }
+
+    /// widget is active, HANDLE LOGIC CHANGES
+    else if (state.selectedMessageIndex != -1) {
+      // Update classification status when it changes while overlay is active
+      Message selectedMessage = _getSelectedMessage(state);
+
+      bool? isGenerated;
+
+      if (selectedMessage.correctlyIdentified == null) {
+        if (state.status == ChatStatus.loading) {
+          _classificationStatus = ClassificationStatus.loading;
+          _isGenerated = null;
+          _guessedCorrectly = null;
+        } else if (state.status == ChatStatus.success) {
+          _classificationStatus = ClassificationStatus.unclassified;
+          _isGenerated = null;
+          _guessedCorrectly = null;
+        } else {
+          _classificationStatus = ClassificationStatus.error;
+          _isGenerated = null;
+          _guessedCorrectly = null;
+        }
+      } else {
+        _classificationStatus = ClassificationStatus.classified;
+        _isGenerated = selectedMessage.generated;
+        _guessedCorrectly = selectedMessage.correctlyIdentified;
+      }
     }
   }
 
@@ -251,32 +334,51 @@ class _GameOverlayState extends State<GameOverlay>
   /// Each component handles its own rendering details.
   Widget _buildOverlayContent(Message message) {
     return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        return Stack(
-          children: [
-            // Background blur - handled by dedicated component
-            _AnimatedBlurBackground(
-              blurAnimation: _blurAnimation,
-              opacityAnimation: _opacityAnimation,
-              onTap: _onTapOutside,
-            ),
+        animation: _controller,
+        builder: (context, _) {
+          return Stack(
+            children: [
+              // Background blur - handled by dedicated component
+              _AnimatedBlurBackground(
+                blurAnimation: _blurAnimation,
+                opacityAnimation: _opacityAnimation,
+                onTap: _dismissOverlay,
+              ),
 
-            // Message bubble - handled by dedicated component
-            _MessageBubbleWithGlow(
-              message: message,
-              opacityAnimation: _opacityAnimation,
-            ),
+              // Classification result or loading indicator
+              if (_classificationStatus == ClassificationStatus.classified || 
+                  _classificationStatus == ClassificationStatus.loading)
+                _ClassificationResult(
+                  opacityAnimation: _opacityAnimation,
+                  classificationStatus: _classificationStatus,
+                  isGenerated: _isGenerated,
+                ),
 
-            // Action button - handled by dedicated component
-            _AnimatedActionButton(
-              message: message,
-              opacityAnimation: _opacityAnimation,
-            ),
-          ],
-        );
-      }
-    );
+              // Message bubble - handled by dedicated component
+              _MessageBubbleWithGlow(
+                message: message,
+                opacityAnimation: _opacityAnimation,
+                classificationStatus: _classificationStatus,
+                isGenerated: _isGenerated,
+              ),
+
+              // Classification Indicator
+              if (_classificationStatus == ClassificationStatus.classified)
+                _ClassificationIndicator(
+                  correctlyIdentified: _guessedCorrectly!,
+                  opacityAnimation: _opacityAnimation,
+                ),
+
+              // Action button - handled by dedicated component
+              _AnimatedActionButton(
+                message: message,
+                opacityAnimation: _opacityAnimation,
+                classificationStatus: _classificationStatus,
+                onDismiss: _dismissOverlay,
+              ),
+            ],
+          );
+        });
   }
 }
 
@@ -295,10 +397,10 @@ class _GameOverlayState extends State<GameOverlay>
 class _AnimatedBlurBackground extends StatelessWidget {
   /// Animation that controls blur intensity
   final Animation<double> blurAnimation;
-  
+
   /// Animation that controls background opacity
   final Animation<double> opacityAnimation;
-  
+
   /// Callback when background is tapped
   final VoidCallback onTap;
 
@@ -347,13 +449,21 @@ class _AnimatedBlurBackground extends StatelessWidget {
 class _MessageBubbleWithGlow extends StatelessWidget {
   /// The message to display
   final Message message;
-  
+
   /// Animation that controls opacity and other effects
   final Animation<double> opacityAnimation;
+
+  /// Classification status of the message
+  final ClassificationStatus classificationStatus;
+
+  /// Classification result (true if generated, false if not)
+  final bool? isGenerated;
 
   const _MessageBubbleWithGlow({
     required this.message,
     required this.opacityAnimation,
+    required this.classificationStatus,
+    required this.isGenerated,
   });
 
   @override
@@ -403,13 +513,21 @@ class _MessageBubbleWithGlow extends StatelessWidget {
 class _AnimatedActionButton extends StatelessWidget {
   /// The message that the action applies to
   final Message message;
-  
+
   /// Animation that controls button effects
   final Animation<double> opacityAnimation;
+
+  /// Classification status of the message
+  final ClassificationStatus classificationStatus;
+
+  /// Callback when the overlay is dismissed
+  final VoidCallback onDismiss;
 
   const _AnimatedActionButton({
     required this.message,
     required this.opacityAnimation,
+    required this.classificationStatus,
+    required this.onDismiss,
   });
 
   @override
@@ -425,32 +543,60 @@ class _AnimatedActionButton extends StatelessWidget {
             decoration: BoxDecoration(
               boxShadow: [
                 BoxShadow(
-                  blurRadius: OverlayAnimations.glowBlurRadius * opacityAnimation.value,
-                  spreadRadius: OverlayAnimations.glowMinSpread + 
-                      (OverlayAnimations.glowMaxSpread + 
-                       OverlayAnimations.glowMinSpread) * opacityAnimation.value,
+                  blurRadius:
+                      OverlayAnimations.glowBlurRadius * opacityAnimation.value,
+                  spreadRadius: OverlayAnimations.glowMinSpread +
+                      (OverlayAnimations.glowMaxSpread +
+                              OverlayAnimations.glowMinSpread) *
+                          opacityAnimation.value,
                   color: OverlayAnimations.glowColor,
                 ),
               ],
             ),
-            child: FilledButton.icon(
-              onPressed: () => _classifyMessage(context),
-              icon: const Icon(Icons.content_paste_search),
-              label: const Text('  C L A S S I F Y'),
-              style: FilledButton.styleFrom(
-                // Dynamic padding creates a "growing" effect
-                padding: EdgeInsets.symmetric(
-                  horizontal: OverlayAnimations.buttonMinPadding + 
-                    (OverlayAnimations.buttonMaxPadding - OverlayAnimations.buttonMinPadding) * 
-                    opacityAnimation.value,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(OverlayAnimations.buttonBorderRadius),
-                ),
-                backgroundColor: Theme.of(context).colorScheme.primary
-              ),
-            ),
+            child: classificationStatus == ClassificationStatus.classified
+                ? FilledButton.tonal(
+                    onPressed: onDismiss,
+                    style: FilledButton.styleFrom(
+                      // Dynamic padding creates a "growing" effect
+                      padding: EdgeInsets.symmetric(
+                        horizontal: OverlayAnimations.buttonMinPadding +
+                            (OverlayAnimations.buttonMaxPadding -
+                                    OverlayAnimations.buttonMinPadding) *
+                                opacityAnimation.value,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                            OverlayAnimations.buttonBorderRadius),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.close),
+                        Text('  D I S M I S S'),
+                      ],
+                    ),
+                  )
+                : FilledButton.icon(
+                    onPressed: () => _classifyMessage(context),
+                    icon: const Icon(Icons.content_paste_search),
+                    label: const Text('  C L A S S I F Y'),
+                    style: FilledButton.styleFrom(
+                        // Dynamic padding creates a "growing" effect
+                        padding: EdgeInsets.symmetric(
+                          horizontal: OverlayAnimations.buttonMinPadding +
+                              (OverlayAnimations.buttonMaxPadding -
+                                      OverlayAnimations.buttonMinPadding) *
+                                  opacityAnimation.value,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              OverlayAnimations.buttonBorderRadius),
+                        ),
+                        backgroundColor: Theme.of(context).colorScheme.primary),
+                  ),
           ),
         ),
       ),
@@ -462,5 +608,134 @@ class _AnimatedActionButton extends StatelessWidget {
   /// This method keeps business logic for the button separated from the UI rendering code.
   void _classifyMessage(BuildContext context) {
     context.read<ChatCubit>().classifyMessage(messageId: message.id);
+  }
+}
+
+/// Classification result widget
+///
+/// Displays the classification result at the top of the screen
+/// with appropriate visual indicators
+class _ClassificationResult extends StatelessWidget {
+  /// Animation that controls opacity
+  final Animation<double> opacityAnimation;
+
+  /// Whether the message was generated (true) or not (false)
+  final bool? isGenerated;
+  
+  /// Current classification status
+  final ClassificationStatus classificationStatus;
+
+  const _ClassificationResult({
+    required this.opacityAnimation,
+    required this.classificationStatus,
+    this.isGenerated,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 180,
+      left: 0,
+      right: 0,
+      child: Opacity(
+        opacity: opacityAnimation.value,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 35),
+            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "The message was",
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (classificationStatus == ClassificationStatus.loading)
+                  LoadingText(
+                    tickDuration: const Duration(milliseconds: 160),
+                    length: 7,
+                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSecondaryContainer.withAlpha(50),
+                    ),
+                  )
+                else
+                  Text(
+                    isGenerated! ? "generated" : "not generated",
+                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ClassificationIndicator extends StatelessWidget {
+  const _ClassificationIndicator({
+    required this.correctlyIdentified,
+    required this.opacityAnimation,
+  });
+
+  final bool correctlyIdentified;
+  final Animation<double> opacityAnimation;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Opacity(
+        opacity: opacityAnimation.value,
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Spacer(
+              flex: 1,
+            ),
+            Flexible(
+              flex: 1,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: correctlyIdentified
+                          ? Colors.greenAccent.withAlpha(150)
+                          : Colors.redAccent.withAlpha(150),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        correctlyIdentified ? Icons.check : Icons.close,
+                        color: Colors.white,
+                        size: 60,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
   }
 }
