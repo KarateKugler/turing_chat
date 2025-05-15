@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'package:turing_chat/logic/auth_cubit.dart';
 import 'package:turing_chat/widgets/loading_widget.dart';
 import 'package:turing_chat/widgets/text_field_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../logic/chat_cubit.dart';
 import '../theme/style.dart';
@@ -246,7 +248,75 @@ class _SettingsPageState extends State<SettingsPage> {
                                 style: Theme.of(context).textTheme.titleLarge,
                               ),
                             ),
+
                             SizedBox(height: 12),
+
+                            RichText(
+                              text: TextSpan(
+                                style: Theme.of(context).textTheme.bodyMedium,
+                                children: [
+                                  TextSpan(
+                                    text:
+                                        'The following is the system prompt that will be called, in addition to your chat history, when you want to ',
+                                  ),
+                                  TextSpan(
+                                    text: 'generate a message',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  TextSpan(
+                                    text:
+                                        ' in the chat. The model that is used to generate the messages is ',
+                                  ),
+                                  TextSpan(
+                                    text: 'gemini-2.0-flash',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontStyle: FontStyle.italic,
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text:
+                                    '. This is currently the only available model.',
+                                  ),
+                                  TextSpan(
+                                    text:
+                                    '\n\nBy default you use a prompt that is adapted from ',
+                                  ),
+                                  TextSpan(
+                                    text: '(Jones & Bergen, 2024)',
+                                    style: TextStyle(
+                                      fontFamily: 'serif',
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: ', see ',
+                                  ),
+                                  TextSpan(
+                                    text: 'https://arxiv.org/abs/2405.08007',
+                                    style: TextStyle(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      decoration: TextDecoration.underline,
+                                      decorationColor:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () {
+                                        launchUrl(Uri.parse(
+                                            'https://arxiv.org/abs/2405.08007'));
+                                      },
+                                  ),
+
+
+                                  TextSpan(text: '\n\nEdit it in any way you want.'),
+                                ],
+                              ),
+                            ),
+
+                            SizedBox(height: 30),
 
                             /// Edit prompt
                             NotificationListener<OverscrollNotification>(
