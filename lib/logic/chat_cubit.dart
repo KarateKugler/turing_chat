@@ -189,6 +189,14 @@ class ChatCubit extends Cubit<ChatState> {
         return;
       }
 
+      if (friendUsername == state.currentUser!.username) {
+        emit(state.copyWith(
+          status: ChatStatus.error,
+          errorMessage: 'You cannot add yourself as a friend',
+        ));
+        return;
+      }
+
       String friendId =
           await _db.addFriendByUsername(state.currentUser!.id, friendUsername);
 
