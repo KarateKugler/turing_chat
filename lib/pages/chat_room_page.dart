@@ -113,7 +113,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                     title: 'block contact',
                     description: 'are you sure you want to block ${widget.chatRoom.contact.username}? You will no longer be able to send or receive messages from them.',
                     primaryButtonText: 'block',
-                    primaryButtonIcon: Icons.block,
+                    primaryButtonIcon: Icons.no_accounts,
                     onPrimaryPressed: () {
                       context.read<ChatCubit>().blockContact(widget.chatRoom.contact.id);
                     },

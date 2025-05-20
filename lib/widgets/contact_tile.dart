@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../logic/chat_cubit.dart';
 import '../models/contact.dart';
 import '../theme/style.dart';
+import 'dialog_overlay.dart';
 import 'shadow_widget.dart';
 
 const double leadingIconSize = 25;
@@ -14,9 +17,11 @@ class ContactTile extends StatelessWidget {
   final void Function()? onTap;
   final String? lastMessage;
   final bool isLastMessageFromUser;
+  final String contactId;
 
   const ContactTile({
     required this.text,
+    required this.contactId,
     this.unread,
     required this.friendStatus,
     required this.onlineStatus,
@@ -34,7 +39,7 @@ class ContactTile extends StatelessWidget {
     Color tileColor = Theme.of(context).colorScheme.tertiaryContainer;
     Color borderColor = onlineStatus.isOnline
         ? Theme.of(context).colorScheme.primary
-        : Colors.transparent; // can add some pulsating effect?
+        : Colors.transparent;
 
     switch (friendStatus) {
       case FriendStatus.error:
@@ -102,7 +107,7 @@ class ContactTile extends StatelessWidget {
         break;
     }
 
-    return ShadowWidget(
+    Widget tile = ShadowWidget(
       shadow: [BoxShadow(color: borderColor, spreadRadius: 2, blurRadius: 5)],
       color: tileColor,
       borderRadius: BorderRadius.circular(Style.contactTileBorderRadius),
@@ -148,6 +153,52 @@ class ContactTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+
+    return Dismissible(
+      key: Key(contactId),
+      direction: DismissDirection.horizontal,
+      confirmDismiss: (direction) async {
+        // Show block dialog
+        return await showDialog(
+          context: context,
+          builder: (context) => DialogOverlay(
+            title: 'block contact',
+            description: 'are you sure you want to block $text? You will no longer be able to send or receive messages from them.',
+            primaryButtonText: 'block',
+            primaryButtonIcon: Icons.no_accounts,
+            onPrimaryPressed: () {
+              context.read<ChatCubit>().blockContact(contactId);
+            },
+            isCritical: true,
+          ),
+        ) ?? false;
+      },
+      background: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.error,
+          borderRadius: BorderRadius.circular(Style.contactTileBorderRadius),
+        ),
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20),
+        child: const Icon(
+          Icons.no_accounts,
+          color: Colors.white,
+        ),
+      ),
+      secondaryBackground: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.error,
+          borderRadius: BorderRadius.circular(Style.contactTileBorderRadius),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Icon(
+          Icons.block,
+          color: Colors.white,
+        ),
+      ),
+      child: tile,
     );
   }
 
