@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:turing_chat/logic/auth_cubit.dart';
 import 'package:turing_chat/widgets/loading_widget.dart';
 
+import '../logic/chat_cubit.dart';
 import 'app_logo.dart';
 import 'home_drawer_tile.dart';
 
@@ -81,7 +82,21 @@ class _HomeDrawerState extends State<HomeDrawer> {
                   _logOutLoading = true;
                 });
 
-                await authCubit.logOut();
+                try {
+                  await authCubit.logOut();
+
+                  context.read<ChatCubit>().logOut();
+                }
+
+                /// If log out fails, show error message
+                catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Log out failed'),
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                  );
+                }
 
                 setState(() {
                   _logOutLoading = false;

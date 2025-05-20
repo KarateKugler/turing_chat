@@ -118,8 +118,6 @@ class _LoginViewState extends State<LoginView> {
                           email: _emailController.text,
                           password: _passwordController.text,
                         );
-
-                        /// todo redirect to welcome or home page
                       }
                     },
                   ),

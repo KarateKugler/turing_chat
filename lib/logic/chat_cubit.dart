@@ -16,17 +16,7 @@ class ChatCubit extends Cubit<ChatState> {
   final DatabaseService _db;
 
   ChatCubit(this._auth, this._db)
-      : super(ChatState(
-          status: ChatStatus.initial,
-          currentUser: null,
-          chatroomsByUsername: {},
-          userSettings: Settings(
-            systemPrompt: '',
-            promptUpdatedAt: DateTime.fromMicrosecondsSinceEpoch(0),
-          ),
-          chatroomContactUsername: '',
-          selectedMessageIndex: -1,
-        ));
+      : super(ChatState.initial);
 
   /// Initialize the ChatCubit
   /// (only called if Authenticated, so active session is ensured)
@@ -68,8 +58,21 @@ class ChatCubit extends Cubit<ChatState> {
 
   @override
   Future<void> close() {
+    /// close all message listeners
     _db.close();
     return super.close();
+  }
+
+  void logOut()  {
+    emit(state.copyWith(status: ChatStatus.loading));
+    try {
+      emit(ChatState.initial);
+    } catch (e) {
+      emit(state.copyWith(
+        status: ChatStatus.error,
+        errorMessage: e.toString(),
+      ));
+    }
   }
 
   /// emit a chat error state directly

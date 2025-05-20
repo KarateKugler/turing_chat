@@ -70,6 +70,18 @@ final class ChatState {
     );
   }
 
+  static ChatState initial = ChatState(
+    status: ChatStatus.initial,
+    currentUser: null,
+    chatroomsByUsername: {},
+    userSettings: Settings(
+      systemPrompt: '',
+      promptUpdatedAt: DateTime.fromMicrosecondsSinceEpoch(0),
+    ),
+    chatroomContactUsername: '',
+    selectedMessageIndex: -1,
+  );
+
   /// for dbg
   @override
   String toString() {
