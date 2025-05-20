@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../logic/chat_cubit.dart';
@@ -10,7 +11,7 @@ import 'shadow_widget.dart';
 const double leadingIconSize = 25;
 
 class ContactTile extends StatelessWidget {
-  final String text;
+  final String contactName;
   final int? unread;
   final FriendStatus friendStatus;
   final OnlineStatus onlineStatus;
@@ -20,7 +21,7 @@ class ContactTile extends StatelessWidget {
   final String contactId;
 
   const ContactTile({
-    required this.text,
+    required this.contactName,
     required this.contactId,
     this.unread,
     required this.friendStatus,
@@ -34,7 +35,7 @@ class ContactTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget leading;
-    String? suffix;
+    String? infoText;
     String? onTapMessage;
     Color tileColor = Theme.of(context).colorScheme.tertiaryContainer;
     Color borderColor = onlineStatus.isOnline
@@ -48,7 +49,7 @@ class ContactTile extends StatelessWidget {
           color: Theme.of(context).colorScheme.error,
           size: leadingIconSize,
         );
-        suffix = '(error...)';
+        infoText = '(error...)';
         onTapMessage = 'an unknown error occured, please let me know.';
         break;
 
@@ -57,7 +58,7 @@ class ContactTile extends StatelessWidget {
           Icons.schedule_send,
           size: leadingIconSize,
         );
-        suffix = '(/pending<>>)';
+        infoText = '(/pending<>>)';
         onTapMessage = 'the contact has not accepted your request... ._.';
         tileColor = tileColor.withAlpha(150);
         break;
@@ -73,7 +74,7 @@ class ContactTile extends StatelessWidget {
             )
           ],
         );
-        suffix = '> (accept) <';
+        infoText = '> (accept) <';
         break;
 
       case FriendStatus.friend:
@@ -81,7 +82,7 @@ class ContactTile extends StatelessWidget {
           Icons.chat,
           size: leadingIconSize,
         );
-        suffix = null;
+        infoText = null;
         break;
 
       case FriendStatus.blockedIn:
@@ -90,7 +91,7 @@ class ContactTile extends StatelessWidget {
           color: Theme.of(context).colorScheme.error,
           size: leadingIconSize,
         );
-        suffix = '(blocked you)';
+        infoText = '(blocked you)';
         onTapMessage = 'this contact has blocked you! <0.o>';
         tileColor = tileColor.withAlpha(150);
         break;
@@ -101,11 +102,29 @@ class ContactTile extends StatelessWidget {
           color: Theme.of(context).colorScheme.error,
           size: leadingIconSize,
         );
-        suffix = '(is blocked)';
+        infoText = '(is blocked)';
         onTapMessage = 'you  b l o c k e d  this contact! o>o>';
         tileColor = tileColor.withAlpha(150);
         break;
     }
+
+    /// If there is an infoText, show that
+    /// otherwise show the last message
+    /// if there is no last message either, show nothing
+    Widget? subtitle = infoText != null
+        ? Text(
+            infoText,
+            style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: Theme.of(context).colorScheme.onTertiaryContainer,
+                ),
+          )
+        : lastMessage != null ? Text(
+         (isLastMessageFromUser ? 'you? :  ' : '$contactName? :  ') + lastMessage!,
+      style: Theme.of(context).textTheme.labelMedium!,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    ) : null;
 
     Widget tile = ShadowWidget(
       shadow: [BoxShadow(color: borderColor, spreadRadius: 2, blurRadius: 5)],
@@ -113,22 +132,13 @@ class ContactTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(Style.contactTileBorderRadius),
       child: ListTile(
         /// username and online status
-        title: RichText(
-            text: TextSpan(
-          text: suffix != null ? '$text $suffix' : text,
-          style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                fontStyle: suffix != null ? FontStyle.italic : FontStyle.normal,
-              ),
-          children: [
-            TextSpan(
-              text: onlineStatus.isOnline ? ' (online)' : '',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium!
-                  .copyWith(fontStyle: FontStyle.italic),
-            ),
-          ],
-        )),
+        title: Text(
+          contactName + (onlineStatus.isOnline ? ' (online)' : ''),
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge!
+              .copyWith(fontStyle: FontStyle.italic),
+        ),
         /// leading icon
         leading: leading,
         onTap: onTapMessage == null
@@ -143,14 +153,7 @@ class ContactTile extends StatelessWidget {
         trailing: null,
         subtitle: Padding(
           padding: const EdgeInsets.symmetric(vertical: 5.0),
-          child: Text(
-            lastMessage != null 
-                ? (isLastMessageFromUser ? 'you? :  ' : '$text? :  ') + lastMessage!
-                : '',
-            style: Theme.of(context).textTheme.labelMedium!.copyWith(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+          child: subtitle,
         ),
       ),
     );
@@ -158,13 +161,22 @@ class ContactTile extends StatelessWidget {
     return Dismissible(
       key: Key(contactId),
       direction: DismissDirection.horizontal,
+      onDismissed: (direction) {
+        HapticFeedback.heavyImpact();
+      },
+      onUpdate: (details) {
+        if (details.progress > 0.5) {
+          HapticFeedback.mediumImpact();
+        }
+      },
       confirmDismiss: (direction) async {
+        HapticFeedback.heavyImpact();
         // Show block dialog
         return await showDialog(
           context: context,
           builder: (context) => DialogOverlay(
             title: 'block contact',
-            description: 'are you sure you want to block $text? You will no longer be able to send or receive messages from them.',
+            description: 'are you sure you want to block $contactName? You will no longer be able to send or receive messages from them.',
             primaryButtonText: 'block',
             primaryButtonIcon: Icons.no_accounts,
             onPrimaryPressed: () {

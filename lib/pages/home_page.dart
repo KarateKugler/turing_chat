@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage> {
                     return Padding(
                       padding: const EdgeInsets.all(4.0),
                       child: ContactTile(
-                        text: entry.key,
+                        contactName: entry.key,
                         contactId: entry.value.contact.id,
                         friendStatus: entry.value.contact.friendStatus,
                         onTap: () {
