@@ -282,6 +282,29 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
+  /// unblock a contact
+
+  void unblockContact(String contactId) {
+    try {
+      emit(state.copyWith(status: ChatStatus.loading));
+
+      // Call database service to unblock the contact
+      _db.unblockContact(
+        userId: state.currentUser!.id,
+        contactId: contactId,
+      );
+
+      // update contacts (emits success)
+      fetchContactsAndChannels();
+    } catch (e) {
+      debugPrint(e.toString());
+      emit(state.copyWith(
+        status: ChatStatus.error,
+        errorMessage: e.toString(),
+      ));
+    }
+  }
+
   /// /////////////////////////////////
   ///   MESSAGES
 

@@ -152,6 +152,23 @@ class DatabaseService {
     }
   }
 
+  /// Unblock a contact
+
+  Future<void> unblockContact({
+    required String userId,
+    required String contactId,
+  }) async {
+    try {
+      await _client.rpc('unblock_contact',
+          params: {'user_id': userId, 'cont_id': contactId});
+    }
+
+    /// ...
+    catch (e) {
+      rethrow;
+    }
+  }
+
   /// ///////////////////////////////////
   /// realtime
 

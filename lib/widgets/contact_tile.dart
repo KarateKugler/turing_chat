@@ -158,6 +158,18 @@ class ContactTile extends StatelessWidget {
       ),
     );
 
+    // If blocked by the other user, just show the tile without dismissal
+    if (friendStatus == FriendStatus.blockedIn) {
+      return tile;
+    }
+
+    // Determine the dismissal action based on friend status
+    final bool isUnblockAction = friendStatus == FriendStatus.blockedOut;
+    final String actionText = isUnblockAction ? 'unblock' : 'block';
+    final String actionDescription = isUnblockAction 
+        ? 'are you sure you want to unblock $contactName? You will be able to send and receive messages from them again.'
+        : 'are you sure you want to block $contactName? You will no longer be able to send or receive messages from them.';
+
     return Dismissible(
       key: Key(contactId),
       direction: DismissDirection.horizontal,
@@ -171,42 +183,50 @@ class ContactTile extends StatelessWidget {
       },
       confirmDismiss: (direction) async {
         HapticFeedback.heavyImpact();
-        // Show block dialog
+        // Show block/unblock dialog
         return await showDialog(
           context: context,
           builder: (context) => DialogOverlay(
-            title: 'block contact',
-            description: 'are you sure you want to block $contactName? You will no longer be able to send or receive messages from them.',
-            primaryButtonText: 'block',
-            primaryButtonIcon: Icons.no_accounts,
+            title: '$actionText contact',
+            description: actionDescription,
+            primaryButtonText: actionText,
+            primaryButtonIcon: isUnblockAction ? Icons.person_add : Icons.no_accounts,
             onPrimaryPressed: () {
-              context.read<ChatCubit>().blockContact(contactId);
+              if (isUnblockAction) {
+                context.read<ChatCubit>().unblockContact(contactId);
+              } else {
+                context.read<ChatCubit>().blockContact(contactId);
+              }
             },
-            isCritical: true,
+            isCritical: !isUnblockAction,
           ),
         ) ?? false;
       },
       background: Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.error,
+          color: isUnblockAction 
+              ? Theme.of(context).colorScheme.primary 
+              : Theme.of(context).colorScheme.error,
           borderRadius: BorderRadius.circular(Style.contactTileBorderRadius),
         ),
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.only(left: 20),
-        child: const Icon(
-          Icons.no_accounts,
+        child: Icon(
+          isUnblockAction ? Icons.person_add : Icons.no_accounts,
           color: Colors.white,
         ),
       ),
       secondaryBackground: Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.error,
+          color: isUnblockAction 
+              ? Theme.of(context).colorScheme.primary 
+              : Theme.of(context).colorScheme.error,
           borderRadius: BorderRadius.circular(Style.contactTileBorderRadius),
         ),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: const Icon(
-          Icons.block,
+        child: Icon(
+          isUnblockAction ? Icons.person_add : Icons.no_accounts,
           color: Colors.white,
         ),
       ),

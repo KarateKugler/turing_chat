@@ -320,7 +320,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                       widget.chatRoom.contact.username);
 
                                   /// refresh chat room
-                                  chatCubit.init();
+                                  chatCubit.fetchMessages(
+                                      widget.chatRoom.contact.username);
 
                                   // todo: use state mgmt and refresh page with bloc builder
                                   // if (context.mounted) {
