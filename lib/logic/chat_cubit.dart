@@ -173,7 +173,6 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   /// Add a new friend by username
-
   Future<void> addFriendByUsername(String friendUsername) async {
     /// Try finding by username and adding
     try {
@@ -234,6 +233,49 @@ class ChatCubit extends Cubit<ChatState> {
     /// other error
     catch (e) {
       emit(state.copyWith(errorMessage: 'unexpected error occured: $e'));
+    }
+  }
+
+  /// block a contact
+
+  void blockContact(String contactId) {
+    try {
+      emit(state.copyWith(status: ChatStatus.loading));
+      
+      // Call database service to block the contact
+      _db.blockContact(
+        userId: state.currentUser!.id,
+        contactId: contactId,
+      );
+
+      // Find the contact username from the contactId
+      String? contactUsername;
+      state.chatroomsByUsername.forEach((username, chatroom) {
+        if (chatroom.contact.id == contactId) {
+          contactUsername = username;
+        }
+      });
+
+      if (contactUsername != null) {
+        // Update the chatroom's friend status to blocked
+        Map<String, ChatRoom> updatedChatrooms = Map.from(state.chatroomsByUsername);
+        updatedChatrooms[contactUsername!] = updatedChatrooms[contactUsername]!
+            .copyWithUpdatedFriendStatus(FriendStatus.blockedOut);
+
+        // Remove message subscription if it exists
+        removeMessageSubscription(contactUsername!);
+
+        emit(state.copyWith(
+          chatroomsByUsername: updatedChatrooms,
+          status: ChatStatus.success,
+        ));
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+      emit(state.copyWith(
+        status: ChatStatus.error,
+        errorMessage: e.toString(),
+      ));
     }
   }
 

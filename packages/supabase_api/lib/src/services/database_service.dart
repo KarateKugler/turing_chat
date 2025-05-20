@@ -113,8 +113,10 @@ class DatabaseService {
     return contacts;
   }
 
-  Future<ContactModel> fetchContact(
-      {required String userId, required String contactId}) async {
+  Future<ContactModel> fetchContact({
+    required String userId,
+    required String contactId,
+  }) async {
     try {
       List? response = await _client.rpc('get_contact',
           params: {'user_id': userId, 'cont_id': contactId});
@@ -123,6 +125,25 @@ class DatabaseService {
           json: response!.first, friendIn: true, friendOut: true);
 
       return result;
+    }
+
+    /// ...
+    catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Block a contact
+
+  Future<void> blockContact({
+    required String userId,
+    required String contactId,
+  }) async {
+    try {
+      await _client.rpc('block_contact',
+          params: {'user_id': userId, 'cont_id': contactId});
+
+
     }
 
     /// ...

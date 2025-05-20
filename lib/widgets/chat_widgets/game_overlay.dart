@@ -55,37 +55,9 @@ import 'package:turing_chat/widgets/loading_text.dart';
 import 'package:turing_chat/widgets/chat_widgets/message_bubble.dart';
 
 import '../../logic/chat_cubit.dart';
+import '../components/animated_blur_background.dart';
 
-/// Animation constants for overlay effects
-///
-/// This class centralizes all animation-related values to:
-/// - Provide a single place to modify animation parameters
-///
-/// Using a private constructor prevents instantiation, enforcing
-/// access through static constants only.
-class OverlayAnimations {
-  // Colors
-  static const glowColor = Color(0xA35F00FF);
-
-  // Animation parameters
-  static const blurIntensity = 5.0;
-  static const duration = Duration(milliseconds: 500);
-  static const curve = Curves.easeInOut;
-
-  // Button animation values
-  static const buttonMinPadding = 12.0;
-  static const buttonMaxPadding = 60.0;
-  static const buttonBottom = 40.0;
-  static const buttonBorderRadius = 30.0;
-
-  // Glow effect values
-  static const glowBlurRadius = 30.0;
-  static const glowMinSpread = -10.0;
-  static const glowMaxSpread = 5.0;
-
-  // Prevent instantiation
-  OverlayAnimations._();
-}
+import '../../theme/style.dart';
 
 /// The main overlay widget for handling message selection and actions
 ///
@@ -339,7 +311,7 @@ class _GameOverlayState extends State<GameOverlay>
           return Stack(
             children: [
               // Background blur - handled by dedicated component
-              _AnimatedBlurBackground(
+              AnimatedBlurBackground(
                 blurAnimation: _blurAnimation,
                 opacityAnimation: _opacityAnimation,
                 onTap: _dismissOverlay,
@@ -382,63 +354,6 @@ class _GameOverlayState extends State<GameOverlay>
   }
 }
 
-/// Animated background with blur effect
-///
-/// - Rendering the fullscreen backdrop
-/// - Applying animated blur effect
-/// - Managing the background gradient
-/// - Handling tap detection
-///
-/// - Isolates backdrop rendering logic
-/// - Can be reused for other overlay effects
-///
-/// The component accepts animations as parameters rather than
-/// creating its own. (dependency injection)
-class _AnimatedBlurBackground extends StatelessWidget {
-  /// Animation that controls blur intensity
-  final Animation<double> blurAnimation;
-
-  /// Animation that controls background opacity
-  final Animation<double> opacityAnimation;
-
-  /// Callback when background is tapped
-  final VoidCallback onTap;
-
-  const _AnimatedBlurBackground({
-    required this.blurAnimation,
-    required this.opacityAnimation,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: blurAnimation.value,
-          sigmaY: blurAnimation.value,
-        ),
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                const Color(0x3F353535)
-                    .withOpacity(opacityAnimation.value * 0.3),
-                const Color(0x402C2C2C)
-                    .withOpacity(opacityAnimation.value * 0.3),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// Message bubble with glow effect
 ///

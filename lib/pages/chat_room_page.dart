@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:turing_chat/models/contact.dart';
 import 'package:turing_chat/widgets/chat_widgets/chat_input_field.dart';
 import 'package:turing_chat/widgets/loading_widget.dart';
+import 'package:flutter/services.dart';
 
 import '../logic/chat_cubit.dart';
 import '../models/chat_room.dart';
@@ -13,6 +14,8 @@ import '../models/message.dart';
 import '../theme/style.dart';
 import '../widgets/chat_widgets/game_overlay.dart';
 import '../widgets/chat_widgets/message_bubble.dart';
+import '../widgets/dialog_overlay.dart';
+import '../widgets/chat_widgets/long_press_title.dart';
 
 /// The Chat Room page
 
@@ -54,6 +57,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   /// Selecting a message
   List<MessageBubble>? _selectedMessageBubble;
+
+  /// Long press state
+  bool _isLongPressing = false;
 
   @override
   void initState() {
@@ -98,7 +104,24 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       children: [
         Scaffold(
           appBar: AppBar(
-            title: Text(widget.chatRoom.contact.username),
+            title: LongPressTitle(
+              text: widget.chatRoom.contact.username,
+              onLongPress: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => DialogOverlay(
+                    title: 'block contact',
+                    description: 'are you sure you want to block ${widget.chatRoom.contact.username}? You will no longer be able to send or receive messages from them.',
+                    primaryButtonText: 'block',
+                    primaryButtonIcon: Icons.block,
+                    onPrimaryPressed: () {
+                      context.read<ChatCubit>().blockContact(widget.chatRoom.contact.id);
+                    },
+                    isCritical: true,
+                  ),
+                );
+              },
+            ),
             actions: [
               // Score display
               Padding(
