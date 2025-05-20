@@ -6,16 +6,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:turing_chat/models/contact.dart';
 import 'package:turing_chat/widgets/chat_widgets/chat_input_field.dart';
 import 'package:turing_chat/widgets/loading_widget.dart';
-import 'package:flutter/services.dart';
 
 import '../logic/chat_cubit.dart';
 import '../models/chat_room.dart';
 import '../models/message.dart';
 import '../theme/style.dart';
 import '../widgets/chat_widgets/game_overlay.dart';
+import '../widgets/chat_widgets/long_press_title.dart';
 import '../widgets/chat_widgets/message_bubble.dart';
 import '../widgets/dialog_overlay.dart';
-import '../widgets/chat_widgets/long_press_title.dart';
 
 /// The Chat Room page
 
@@ -61,10 +60,14 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   /// Long press state
   bool _isLongPressing = false;
 
+  /// Reference to the chatcubit
+  late ChatCubit _chatCubit;
+
   @override
   void initState() {
     super.initState();
     _inputController = TextEditingController();
+    _chatCubit = context.read<ChatCubit>();
   }
 
   @override
@@ -79,9 +82,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   @override
   void dispose() {
     // remove message listener
-    context
-        .read<ChatCubit>()
-        .removeMessageSubscription(widget.chatRoom.contact.username);
+    _chatCubit.removeMessageSubscription(widget.chatRoom.contact.username);
     _inputController.dispose();
     super.dispose();
   }
@@ -111,11 +112,14 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                   context: context,
                   builder: (context) => DialogOverlay(
                     title: 'block contact',
-                    description: 'are you sure you want to block ${widget.chatRoom.contact.username}? You will no longer be able to send or receive messages from them.',
+                    description:
+                        'are you sure you want to block ${widget.chatRoom.contact.username}? You will no longer be able to send or receive messages from them.',
                     primaryButtonText: 'block',
                     primaryButtonIcon: Icons.no_accounts,
                     onPrimaryPressed: () {
-                      context.read<ChatCubit>().blockContact(widget.chatRoom.contact.id);
+                      context
+                          .read<ChatCubit>()
+                          .blockContact(widget.chatRoom.contact.id);
                     },
                     isCritical: true,
                   ),
