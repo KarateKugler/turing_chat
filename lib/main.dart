@@ -5,6 +5,7 @@ import 'package:supabase_api/supabase_api.dart';
 import 'package:turing_chat/logic/chat_cubit.dart';
 import 'package:turing_chat/theme/dark_scheme.dart';
 
+import 'app/app.dart';
 import 'core/app_router.dart';
 import 'logic/auth_cubit.dart';
 
@@ -54,7 +55,7 @@ void main() async {
             ),
           ),
         ],
-        child: TuringChatApp(
+        child: App(
           activeSession: authCubit.state is AuthLoggedIn,
         ),
       ),
@@ -62,18 +63,3 @@ void main() async {
   );
 }
 
-class TuringChatApp extends StatelessWidget {
-  /// Whether to show the login screen first
-  final bool activeSession;
-
-  const TuringChatApp({super.key, required this.activeSession});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'turing_chat',
-      theme: terminalDarkTheme,
-      routerConfig: AppRouter.router,
-    );
-  }
-}
