@@ -10,6 +10,7 @@ import '../logic/auth_cubit.dart';
 import '../models/chat_room.dart';
 import '../pages/auth/login_register_page.dart';
 import '../pages/chat_room_page.dart';
+import '../pages/feedback_page.dart';
 import '../pages/home_page.dart';
 import '../pages/settings_page.dart';
 import '../pages/splash_page.dart';
@@ -21,6 +22,7 @@ class RouterConstants {
   static const String home = '/';
   static const String login = '/login';
   static const String settings = '/settings';
+  static const String feedback = '/feedback';
   static const String chat = '/chat/:id';
   
   static const Duration transitionDuration = Duration(milliseconds: 150);
@@ -55,7 +57,7 @@ class AppRouter {
     return null;
   }
 
-  /// Build app routes
+  /// Build app routes.dart
   static List<RouteBase> _buildRoutes() {
     return [
       _splashRoute(),
@@ -63,6 +65,7 @@ class AppRouter {
       _loginRoute(),
       _settingsRoute(),
       _chatRoute(),
+      _feedbackRoute(),
     ];
   }
 
@@ -93,7 +96,14 @@ class AppRouter {
       builder: (context, state) => const LoginOrRegisterPage(),
     );
   }
-  
+
+  /// Feedback route
+  static GoRoute _feedbackRoute() {
+    return GoRoute(
+      path: RouterConstants.feedback,
+      builder: (context, state) => const FeedbackPage(),
+    );
+  }
   /// Settings screen route
   static GoRoute _settingsRoute() {
     return GoRoute(

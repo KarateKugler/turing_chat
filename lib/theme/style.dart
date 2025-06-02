@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class Style {
   static double fabIconSize = 25;
@@ -6,6 +7,38 @@ class Style {
   static double contactTileBorderRadius = 8.0;
   static double chatTextSize = 13.0;
   static double chatSubTextSize = 10.0;
+
+  /// Creates a markdown style sheet that matches the app's theme
+  static MarkdownStyleSheet markdownStyleSheet(BuildContext context) {
+    return MarkdownStyleSheet(
+      h1: TextStyle(
+        color: Theme.of(context).colorScheme.onPrimaryContainer,
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+      ),
+      h2: TextStyle(
+        color: Theme.of(context).colorScheme.onPrimaryContainer,
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+      ),
+      p: TextStyle(
+        color: Theme.of(context).colorScheme.onPrimaryContainer,
+        fontSize: 16,
+        height: 1.5,
+      ),
+      strong: TextStyle(
+        color: Theme.of(context).colorScheme.onPrimaryContainer,
+        fontWeight: FontWeight.bold,
+      ),
+      em: TextStyle(
+        color: Theme.of(context).colorScheme.onPrimaryContainer,
+        fontStyle: FontStyle.italic,
+      ),
+      listBullet: TextStyle(
+        color: Theme.of(context).colorScheme.onPrimaryContainer,
+      ),
+    );
+  }
 }
 
 /// Animation constants for overlay effects

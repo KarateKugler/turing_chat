@@ -29,16 +29,20 @@ class _HomeDrawerState extends State<HomeDrawer> {
         }
       },
       child: Drawer(
-        backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
+        backgroundColor: Theme
+            .of(context)
+            .colorScheme
+            .surfaceContainer,
         child: Column(
           children: [
+
             /// App logo
-            Padding(
+            const Padding(
               padding: EdgeInsets.only(top: 100),
               child: AppLogo(),
             ),
 
-            Padding(
+            const Padding(
               padding: EdgeInsets.all(25.0),
               child: Divider(),
             ),
@@ -46,19 +50,26 @@ class _HomeDrawerState extends State<HomeDrawer> {
             /// home list tile
             HomeDrawerTile(
               text: 'H O M E',
-              icon: Icon(Icons.home),
+              icon: const Icon(Icons.home),
               onTap: () {
                 context.pop();
                 context.go('/');
               },
             ),
 
-            Spacer(),
+            const Spacer(),
+
+            /// feedback
+            HomeDrawerTile(text: 'F E E D B A C K',
+                icon: const Icon(Icons.favorite_outline),
+                onTap: () {
+                  context.push('/feedback');
+                }),
 
             /// settings
             HomeDrawerTile(
               text: 'S E T T I N G S',
-              icon: Icon(Icons.settings),
+              icon: const Icon(Icons.settings),
               onTap: () {
                 context.push('/settings');
               },
@@ -69,11 +80,11 @@ class _HomeDrawerState extends State<HomeDrawer> {
               text: 'L O G   O U T',
               icon: (_logOutLoading)
 
-                  /// If log out initiated and loading show progress indicator
-                  ? LoadingWidget()
+              /// If log out initiated and loading show progress indicator
+                  ? const LoadingWidget()
 
-                  /// Otherwise just the logout icon
-                  : Icon(Icons.logout),
+              /// Otherwise just the logout icon
+                  : const Icon(Icons.logout),
               onTap: () async {
                 /// Perform Log out
                 AuthCubit authCubit = context.read<AuthCubit>();
@@ -92,8 +103,11 @@ class _HomeDrawerState extends State<HomeDrawer> {
                 catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Log out failed'),
-                      backgroundColor: Theme.of(context).colorScheme.error,
+                      content: const Text('Log out failed'),
+                      backgroundColor: Theme
+                          .of(context)
+                          .colorScheme
+                          .error,
                     ),
                   );
                 }
