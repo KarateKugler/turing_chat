@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../theme/style.dart';
+import '../logic/feedback_cubit.dart';
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({super.key});
@@ -11,11 +13,34 @@ class FeedbackPage extends StatefulWidget {
 }
 
 class _FeedbackPageState extends State<FeedbackPage> {
-  int rating = 0; // Rating controller in main widget
-  TextEditingController feedbackController = TextEditingController(); // Text field controller
-  TextEditingController featureRequestsController = TextEditingController(); // Feature requests text field controller
-  TextEditingController issuesGeneralController = TextEditingController(); // Issues and general feedback controller
-  List<String> selectedFeatures = []; // Selected feature chips
+  late TextEditingController feedbackController;
+  late TextEditingController featureRequestsController;
+  late TextEditingController issuesGeneralController;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controllers
+    feedbackController = TextEditingController();
+    featureRequestsController = TextEditingController();
+    issuesGeneralController = TextEditingController();
+    
+    // Load stored values
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = context.read<FeedbackCubit>().state;
+      feedbackController.text = state.designFeedback;
+      featureRequestsController.text = state.featureRequests;
+      issuesGeneralController.text = state.issuesGeneral;
+    });
+  }
+
+  @override
+  void dispose() {
+    feedbackController.dispose();
+    featureRequestsController.dispose();
+    issuesGeneralController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,61 +49,69 @@ class _FeedbackPageState extends State<FeedbackPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('⁂ ※ feedback ⁑ ⁂')),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                _FeedbackInfo(),
-                SizedBox(height: 20),
-                _FeedbackRating(
-                  rating: rating,
-                  onRatingChanged: (newRating) {
-                    setState(() {
-                      rating = newRating;
-                    });
-                  },
-                  feedbackController: feedbackController,
-                ),
-                SizedBox(height: 20),
-                _FeatureRequests(
-                  selectedFeatures: selectedFeatures,
-                  onFeaturesChanged: (newFeatures) {
-                    setState(() {
-                      selectedFeatures = newFeatures;
-                    });
-                  },
-                  featureRequestsController: featureRequestsController,
-                ),
-                SizedBox(height: 20),
-                _IssuesAndGeneral(
-                  issuesGeneralController: issuesGeneralController,
-                ),
-                SizedBox(height: 20),
-
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: () {
-                      // TODO: Submit feedback function
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      padding: EdgeInsets.symmetric(vertical: 16),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: BlocBuilder<FeedbackCubit, FeedbackState>(
+              builder: (context, state) {
+                return Column(
+                  children: [
+                    _FeedbackInfo(),
+                    SizedBox(height: 20),
+                    _FeedbackRating(
+                      rating: state.rating,
+                      onRatingChanged: (newRating) {
+                        context.read<FeedbackCubit>().ratingChanged(newRating);
+                      },
+                      feedbackController: feedbackController,
+                      onFeedbackChanged: (feedback) {
+                        context.read<FeedbackCubit>().designFeedbackChanged(feedback);
+                      },
                     ),
-                    child: Text(
-                      'Submit Feedback',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: theme.colorScheme.onPrimary,
+                    SizedBox(height: 20),
+                    _FeatureRequests(
+                      selectedFeatures: state.selectedFeatures,
+                      onFeaturesChanged: (newFeatures) {
+                        context.read<FeedbackCubit>().selectedFeaturesChanged(newFeatures);
+                      },
+                      featureRequestsController: featureRequestsController,
+                      onRequestsChanged: (requests) {
+                        context.read<FeedbackCubit>().featureRequestsChanged(requests);
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    _IssuesAndGeneral(
+                      issuesGeneralController: issuesGeneralController,
+                      onIssuesChanged: (feedback) {
+                        context.read<FeedbackCubit>().issuesGeneralChanged(feedback);
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () {
+                          context.read<FeedbackCubit>().submitFeedback();
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: Text(
+                          'Submit Feedback',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: theme.colorScheme.onPrimary,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                SizedBox(height: 40),
-                Divider(color: theme.colorScheme.onSurfaceVariant,),
-                Padding(padding: EdgeInsets.all(20), child: Center(child: Text('Thank you!', style: theme.textTheme.labelLarge!.copyWith(fontStyle: FontStyle.italic))) ),
-              ],
+                    SizedBox(height: 40),
+                    Divider(color: theme.colorScheme.onSurfaceVariant,),
+                    Padding(padding: EdgeInsets.all(20), child: Center(child: Text('Thank you!', style: theme.textTheme.labelLarge!.copyWith(fontStyle: FontStyle.italic))) ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -136,11 +169,13 @@ class _FeedbackRating extends StatelessWidget {
   final int rating;
   final Function(int) onRatingChanged;
   final TextEditingController feedbackController;
+  final Function(String) onFeedbackChanged;
 
   const _FeedbackRating({
     required this.rating,
     required this.onRatingChanged,
     required this.feedbackController,
+    required this.onFeedbackChanged,
   });
 
   @override
@@ -152,7 +187,7 @@ class _FeedbackRating extends StatelessWidget {
         borderRadius: BorderRadius.circular(Style.cornerRadius),
         color: theme
             .colorScheme
-            .secondaryContainer, // todo: try secondaryContainer
+            .primaryContainer, // todo: try secondaryContainer
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0), 
@@ -219,6 +254,7 @@ class _FeedbackRating extends StatelessWidget {
               minLines: 4,
               maxLines: 8,
               controller: feedbackController,
+              onChanged: onFeedbackChanged,
             ),
           ],
         ),
@@ -231,11 +267,13 @@ class _FeatureRequests extends StatelessWidget {
   final List<String> selectedFeatures;
   final Function(List<String>) onFeaturesChanged;
   final TextEditingController featureRequestsController;
+  final Function(String) onRequestsChanged;
 
   const _FeatureRequests({
     required this.selectedFeatures,
     required this.onFeaturesChanged,
     required this.featureRequestsController,
+    required this.onRequestsChanged,
   });
 
   final List<String> availableFeatures = const [
@@ -325,6 +363,7 @@ class _FeatureRequests extends StatelessWidget {
               minLines: 4,
               maxLines: 8,
               controller: featureRequestsController,
+              onChanged: onRequestsChanged,
             ),
           ],
         ),
@@ -335,9 +374,11 @@ class _FeatureRequests extends StatelessWidget {
 
 class _IssuesAndGeneral extends StatelessWidget {
   final TextEditingController issuesGeneralController;
+  final Function(String) onIssuesChanged;
 
   const _IssuesAndGeneral({
     required this.issuesGeneralController,
+    required this.onIssuesChanged,
   });
 
   @override
@@ -380,6 +421,7 @@ class _IssuesAndGeneral extends StatelessWidget {
               minLines: 4,
               maxLines: 8,
               controller: issuesGeneralController,
+              onChanged: onIssuesChanged,
             ),
           ],
         ),

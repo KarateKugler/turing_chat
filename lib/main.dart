@@ -3,10 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_api/supabase_api.dart';
 import 'package:turing_chat/logic/chat_cubit.dart';
-import 'package:turing_chat/theme/dark_scheme.dart';
+import 'package:turing_chat/logic/feedback_cubit.dart';
 
 import 'app/app.dart';
-import 'core/app_router.dart';
 import 'logic/auth_cubit.dart';
 
 void main() async {
@@ -54,6 +53,8 @@ void main() async {
               supabaseApiClient.databaseService,
             ),
           ),
+          // BAD ! should not be in app context, refactor later
+          BlocProvider(create: (_) => FeedbackCubit()),
         ],
         child: App(
           activeSession: authCubit.state is AuthLoggedIn,
@@ -62,4 +63,3 @@ void main() async {
     ),
   );
 }
-
