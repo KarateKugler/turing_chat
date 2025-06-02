@@ -1,11 +1,14 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:supabase_api/supabase_api.dart';
 
 part 'feedback_state.dart';
 
 /// Simple cubit to manage feedback form state
 class FeedbackCubit extends Cubit<FeedbackState> {
-  FeedbackCubit() : super(const FeedbackState());
+  FeedbackCubit(this._databaseService) : super(const FeedbackState());
+
+  final DatabaseService _databaseService;
 
   /// Change notifiers for each field
   void ratingChanged(int rating) => emit(state.withRating(rating));
@@ -18,9 +21,25 @@ class FeedbackCubit extends Cubit<FeedbackState> {
 
   void issuesGeneralChanged(String feedback) => emit(state.withIssuesGeneral(feedback));
 
-  /// Submit feedback function (not implemented yet)
+  /// Submit feedback function
   Future<void> submitFeedback() async {
-    // TODO: Implement feedback submission
-    print('Submitting feedback: ${state.toString()}');
+    emit(state.withStatus(FeedbackStatus.inProgress));
+    
+    try {
+      await _databaseService.submitFeedback(
+        rating: state.rating,
+        design: state.designFeedback,
+        featuresList: state.selectedFeatures,
+        features: state.featureRequests,
+        issuesOther: state.issuesGeneral,
+      );
+      
+      emit(state.withStatus(FeedbackStatus.success));
+      print('Feedback submitted successfully');
+    } catch (e) {
+      emit(state.withStatus(FeedbackStatus.error));
+      print('Error submitting feedback: $e');
+      rethrow;
+    }
   }
 } 

@@ -464,6 +464,31 @@ class DatabaseService {
     }
   }
 
+  /// ///////////////////////
+  /// feedback
+
+  Future<String> submitFeedback({
+    required int rating,
+    required String design,
+    required List<String> featuresList,
+    required String features,
+    required String issuesOther,
+  }) async {
+    try {
+      final response = await _client.rpc('add_feedback', params: {
+        'p_rating': rating,
+        'p_design': design,
+        'p_features_list': featuresList.join(', '),
+        'p_features': features,
+        'p_issues_other': issuesOther,
+      });
+
+      return response as String;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   /// /////////////////////
   /// helpers
 
@@ -481,4 +506,6 @@ class DatabaseService {
 
     return names.join('-');
   }
+
+
 }

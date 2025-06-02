@@ -1,14 +1,34 @@
 part of 'feedback_cubit.dart';
 
+enum FeedbackStatus { initial, inProgress, success, error }
+
 final class FeedbackState extends Equatable {
-  const FeedbackState({
-    this.rating = 0,
-    this.designFeedback = '',
-    this.selectedFeatures = const [],
-    this.featureRequests = '',
-    this.issuesGeneral = '',
+  const FeedbackState._({
+    required this.status,
+    required this.rating,
+    required this.designFeedback,
+    required this.selectedFeatures,
+    required this.featureRequests,
+    required this.issuesGeneral,
   });
 
+  const FeedbackState({
+    FeedbackStatus? status,
+    int? rating,
+    String? designFeedback,
+    List<String>? selectedFeatures,
+    String? featureRequests,
+    String? issuesGeneral,
+  }) : this._(
+    status: status ?? FeedbackStatus.initial,
+    rating: rating ?? 0,
+    designFeedback: designFeedback ?? '',
+    selectedFeatures: selectedFeatures ?? const [],
+    featureRequests: featureRequests ?? '',
+    issuesGeneral: issuesGeneral ?? '',
+  );
+
+  final FeedbackStatus status;
   final int rating;
   final String designFeedback;
   final List<String> selectedFeatures;
@@ -16,8 +36,20 @@ final class FeedbackState extends Equatable {
   final String issuesGeneral;
 
   /// Immutable update methods
+  FeedbackState withStatus(FeedbackStatus status) {
+    return FeedbackState._(
+      status: status,
+      rating: rating,
+      designFeedback: designFeedback,
+      selectedFeatures: selectedFeatures,
+      featureRequests: featureRequests,
+      issuesGeneral: issuesGeneral,
+    );
+  }
+
   FeedbackState withRating(int rating) {
-    return FeedbackState(
+    return FeedbackState._(
+      status: status,
       rating: rating,
       designFeedback: designFeedback,
       selectedFeatures: selectedFeatures,
@@ -27,7 +59,8 @@ final class FeedbackState extends Equatable {
   }
 
   FeedbackState withDesignFeedback(String feedback) {
-    return FeedbackState(
+    return FeedbackState._(
+      status: status,
       rating: rating,
       designFeedback: feedback,
       selectedFeatures: selectedFeatures,
@@ -37,7 +70,8 @@ final class FeedbackState extends Equatable {
   }
 
   FeedbackState withSelectedFeatures(List<String> features) {
-    return FeedbackState(
+    return FeedbackState._(
+      status: status,
       rating: rating,
       designFeedback: designFeedback,
       selectedFeatures: List.from(features),
@@ -47,7 +81,8 @@ final class FeedbackState extends Equatable {
   }
 
   FeedbackState withFeatureRequests(String requests) {
-    return FeedbackState(
+    return FeedbackState._(
+      status: status,
       rating: rating,
       designFeedback: designFeedback,
       selectedFeatures: selectedFeatures,
@@ -57,7 +92,8 @@ final class FeedbackState extends Equatable {
   }
 
   FeedbackState withIssuesGeneral(String feedback) {
-    return FeedbackState(
+    return FeedbackState._(
+      status: status,
       rating: rating,
       designFeedback: designFeedback,
       selectedFeatures: selectedFeatures,
@@ -67,10 +103,10 @@ final class FeedbackState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [rating, designFeedback, selectedFeatures, featureRequests, issuesGeneral];
+  List<Object?> get props => [status, rating, designFeedback, selectedFeatures, featureRequests, issuesGeneral];
 
   @override
   String toString() {
-    return 'FeedbackState(rating: $rating, designFeedback: "$designFeedback", selectedFeatures: $selectedFeatures, featureRequests: "$featureRequests", issuesGeneral: "$issuesGeneral")';
+    return 'FeedbackState(status: $status, rating: $rating, designFeedback: "$designFeedback", selectedFeatures: $selectedFeatures, featureRequests: "$featureRequests", issuesGeneral: "$issuesGeneral")';
   }
 } 

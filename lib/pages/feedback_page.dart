@@ -87,24 +87,59 @@ class _FeedbackPageState extends State<FeedbackPage> {
                       },
                     ),
                     SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () {
-                          context.read<FeedbackCubit>().submitFeedback();
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: Text(
-                          'Submit Feedback',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: theme.colorScheme.onPrimary,
+                    BlocConsumer<FeedbackCubit, FeedbackState>(
+                      listener: (context, state) {
+                        if (state.status == FeedbackStatus.error) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error submitting feedback. Please try again.'),
+                              backgroundColor: Theme.of(context).colorScheme.error,
+                            ),
+                          );
+                        } else if (state.status == FeedbackStatus.success) {
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Feedback submitted successfully! Thank you!'),
+                              backgroundColor: Theme.of(context).colorScheme.primary,
+                            ),
+                          );
+                        }
+                      },
+                      builder: (context, state) {
+                        return SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: state.status == FeedbackStatus.inProgress 
+                                ? null 
+                                : () {
+                                    context.read<FeedbackCubit>().submitFeedback();
+                                  },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: theme.colorScheme.primary,
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: state.status == FeedbackStatus.inProgress
+                                ? SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        theme.colorScheme.onPrimary,
+                                      ),
+                                    ),
+                                  )
+                                : Text(
+                                    'Submit Feedback',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: theme.colorScheme.onPrimary,
+                                    ),
+                                  ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                     SizedBox(height: 40),
                     Divider(color: theme.colorScheme.onSurfaceVariant,),

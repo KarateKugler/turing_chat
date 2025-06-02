@@ -54,7 +54,10 @@ void main() async {
             ),
           ),
           // BAD ! should not be in app context, refactor later
-          BlocProvider(create: (_) => FeedbackCubit()),
+          BlocProvider(
+              create: (_) => FeedbackCubit(
+                    supabaseApiClient.databaseService,
+                  )),
         ],
         child: App(
           activeSession: authCubit.state is AuthLoggedIn,
