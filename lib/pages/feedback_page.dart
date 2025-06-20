@@ -175,18 +175,6 @@ class _FeedbackInfo extends StatelessWidget {
 
 I'm a **solo developer** trying to make **turing_chat** enjoyable for you and your friends! 
 
-Any **feedback** would help a lot to improve the app. Don't hesitate to only write a _few words_, I'd love to hear from you about:
-
-## 🎨 Design & User Experience
-
-## 🚀 Feature Requests
-
-## 🐛 Issues & Problems
-
-## 💭 General Feedback    
-
---  
-
 **Every piece of feedback helps :)**
 
 Thank you for being part of the turing_chat community! 🙏
@@ -339,7 +327,7 @@ class _FeatureRequests extends StatelessWidget {
             MarkdownBody(
               data: '''
 ## 🚀 Feature Requests
-- What new features would you like to see? (e.g. public/ranked game modes, more chat features, etc.)
+- What new features would you like to see? 
 - How can we make the game more engaging?
 ''',
               styleSheet: Style.markdownStyleSheet(context),
@@ -435,7 +423,6 @@ class _IssuesAndGeneral extends StatelessWidget {
             MarkdownBody(
               data: '''
 ## 🐛💭 Issues, Problems & General Feedback
-- Did you encounter any bugs or crashes?
 - Is something not working as expected?
 - Any other thoughts or suggestions?
 ''',
@@ -448,8 +435,8 @@ class _IssuesAndGeneral extends StatelessWidget {
                   borderRadius: BorderRadius.all(
                       Radius.circular(Style.cornerRadius - 8.0)),
                 ),
-                labelText: 'Issues & feedback',
-                hintText: 'Describe any issues or share your thoughts...',
+                labelText: 'Bugs, Issues & feedback',
+                hintText: 'any other feedback',
                 floatingLabelBehavior: FloatingLabelBehavior.always,
               ),
               style: theme.textTheme.bodyMedium,
