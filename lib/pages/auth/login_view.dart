@@ -62,7 +62,7 @@ class _LoginViewState extends State<LoginView> {
 
                   /// Welcome Back message
                   Text(
-                    'Welcome Back to ratatouille!',
+                    'welcome back to turing_chat',
                     style: TextStyle(
                       // put into theme data
                       color: Theme.of(context).colorScheme.primary,
