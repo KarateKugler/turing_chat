@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
 class Style {
+  static Color themeColor1 = Color(0xFFbd8cbf);
+  static Color themeColor2 = Color(0xFF5d3161);
+  static Color themeColor3 = Color(0xFF8781be);
+  static Color themeColor4 = Color(0xFF453f5f);
+
+  static Color glowColor1 = Color(0xffc125c7);
+  static Color glowColor2 = Color(0xff3121c5);
+
   static double fabIconSize = 25;
   static double cornerRadius = 16.0;
   static double contactTileBorderRadius = 16.0;

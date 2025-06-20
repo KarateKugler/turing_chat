@@ -78,7 +78,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text('S E T T I N G S'),
+        title: Text('⌁ ⏻ settings ⏼ ⭘'),
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       ),
       floatingActionButton: changesMade

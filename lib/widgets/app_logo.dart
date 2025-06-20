@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 class AppLogo extends StatelessWidget {
   const AppLogo({
     super.key,
+    this.animatedBorderEnabled = false,
   });
+
+
+  final bool animatedBorderEnabled;
 
   @override
   Widget build(BuildContext context) {
