@@ -1,4 +1,4 @@
-package com.example.turing_chat
+package com.aspect.turing_chat
 
 import io.flutter.embedding.android.FlutterActivity
 
