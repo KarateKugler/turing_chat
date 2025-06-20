@@ -99,7 +99,7 @@ class _HomePageState extends State<HomePage> {
 
                     /// The List of Chat Rooms with Friends
                     return Padding(
-                      padding: const EdgeInsets.all(4.0),
+                      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
                       child: ContactTile(
                         contactName: entry.key,
                         contactId: entry.value.contact.id,
