@@ -82,7 +82,7 @@ class _RegisterViewState extends State<RegisterView> {
 
                   /// Welcome Back message
                   Text(
-                    'welcome back',
+                    'welcome to turing_chat',
                     style: TextStyle(
                       // put into theme data
                       color: Theme.of(context).colorScheme.primary,
