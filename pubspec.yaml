@@ -1,7 +1,7 @@
 name: turing_chat
 description: Turing Test Chat Game
 publish_to: 'none'
-version: 0.0.1+3
+version: 0.0.1+4
 
 environment:
   sdk: '>=3.1.3 <4.0.0'
@@ -34,6 +34,7 @@ flutter:
   assets:
     - .env
     - assets/icon/
+    - assets/images/
 
 flutter_launcher_icons:
   android: "launcher_icon"
