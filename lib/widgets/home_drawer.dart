@@ -59,6 +59,13 @@ class _HomeDrawerState extends State<HomeDrawer> {
 
             const Spacer(),
 
+            /// share
+            HomeDrawerTile(text: 'S H A R E',
+                icon: const Icon(Icons.share),
+                onTap: () {
+                  context.push('/share');
+                }),
+
             /// feedback
             HomeDrawerTile(text: 'F E E D B A C K',
                 icon: const Icon(Icons.favorite_outline),

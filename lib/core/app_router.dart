@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:turing_chat/pages/share_page.dart';
 import '../logic/auth_cubit.dart';
 import '../models/chat_room.dart';
 import '../pages/auth/login_register_page.dart';
@@ -23,6 +24,7 @@ class RouterConstants {
   static const String login = '/login';
   static const String settings = '/settings';
   static const String feedback = '/feedback';
+  static const String share = '/share';
   static const String chat = '/chat/:id';
   
   static const Duration transitionDuration = Duration(milliseconds: 150);
@@ -65,6 +67,7 @@ class AppRouter {
       _loginRoute(),
       _settingsRoute(),
       _chatRoute(),
+      _shareRoute(),
       _feedbackRoute(),
     ];
   }
@@ -104,6 +107,15 @@ class AppRouter {
       builder: (context, state) => const FeedbackPage(),
     );
   }
+
+  /// Share route
+  static GoRoute _shareRoute() {
+    return GoRoute(
+      path: RouterConstants.share,
+      builder: (context, state) => const SharePage(),
+    );
+  }
+
   /// Settings screen route
   static GoRoute _settingsRoute() {
     return GoRoute(
