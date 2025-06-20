@@ -13,8 +13,8 @@ class AppLogo extends StatelessWidget {
           borderRadius: BorderRadius.circular(16.0),
           gradient: LinearGradient(
             colors: [
-              Theme.of(context).colorScheme.onSurfaceVariant,
-              Theme.of(context).colorScheme.onSurface,
+              Theme.of(context).colorScheme.surface,
+              Theme.of(context).colorScheme.surface,
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -25,7 +25,7 @@ class AppLogo extends StatelessWidget {
           height: 80,
           width: 80,
           child: Image.asset(
-            'assets/icon/icon.png',
+            'assets/icon/icon4.png',
             fit: BoxFit.contain,
           ),
         ),
